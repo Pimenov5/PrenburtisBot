@@ -1,0 +1,57 @@
+﻿using PrenburtisBot.Types;
+using System.Text;
+using TelegramBotBase.Form;
+
+namespace PrenburtisBot.Forms
+{
+	internal class Players : LinkedForm
+	{
+		protected override async Task<string?> RenderAsync(params string[] args)
+		{
+			int messageId = default;
+			string? courtId = args.Length == 1 ? args[0] : args.Length == 2 && int.TryParse(args[1], out messageId) ? args[0] : null;
+			Court court = Courts.GetById(courtId);
+
+			IEnumerable<Team> teams = court.Teams;
+			int count = 0, maxCount = 0;
+			bool canSeePlayers = true;
+			foreach (Team team in teams)
+			{
+				count += team.PlayerCount;
+				maxCount += (int)court.TeamMaxPlayerCount;
+				canSeePlayers = canSeePlayers ? canSeePlayers : team.Contains(this.Device.DeviceId);
+			}
+
+			canSeePlayers = canSeePlayers ? canSeePlayers : this.Device.DeviceId == court?.UserId;
+			if (!canSeePlayers)
+				return "Просматривать игроков на площадке могут только присоединившиеся и её создатель";
+			else if (count == 0)
+				teams = [];
+
+			StringBuilder stringBuilder = new(count == 0 ? "Нет игроков на площадке" : $"Игроков на площадке: {count} из {maxCount}" + Environment.NewLine);
+			int i = default;
+			foreach (Team team in teams)
+			{
+				stringBuilder.Append((team.Contains(this.Device.DeviceId) ? "ВАША КОМАНДА" : "Команда") + $" #{++i} ({team.PlayerCount}):");
+				foreach (Player player in team.Players)
+					stringBuilder.Append(' ' + player.Link);
+				stringBuilder.AppendLine(Environment.NewLine);
+			}
+
+			ButtonForm? buttonForm = null;
+			if (i != default && !string.IsNullOrEmpty(courtId) && Environment.GetEnvironmentVariable("MESSAGE_ID_ALIAS") is string messageIdAlias)
+			{
+				buttonForm = new();
+				buttonForm.AddButtonRow(new ButtonBase("🔄", new CallbackData(nameof(Players), ParamsToString(courtId, messageIdAlias)).Serialize()));
+			}
+
+			if (messageId != default)
+				await this.Device.DeleteMessage(messageId);
+
+			await this.Device.Send(stringBuilder.ToString(), buttonForm);
+			return null;
+		}
+
+		public static string Description => "Список игроков на площадке";
+	}
+}
