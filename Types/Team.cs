@@ -23,7 +23,7 @@
 			while (reader.ReadLine() is string name)
 				_names.Add(name);
 
-			return (uint)(count - _names.Count);
+			return (uint)(_names.Count - count);
 		}
 	}
 }
