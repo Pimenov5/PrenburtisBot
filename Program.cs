@@ -30,10 +30,12 @@ namespace PrenburtisBot
 
 		private static async Task Main(string[] args)
 		{
-			SqliteConnectionStringBuilder connectionStringBuilder = new() { Mode = SqliteOpenMode.ReadOnly,
-				DataSource = (Environment.GetEnvironmentVariable("AMVERA") == "1" ? "/" : string.Empty) + "data/prenburtis.db"};
-			using (SqliteConnection connection = new(connectionStringBuilder.ConnectionString))
+			if (GetFilePath("TEAMS_NAMES") is string path)
 			{
+				using StreamReader streamReader = new(path);
+				Console.WriteLine($"Добавлены имена команд ({Team.ReadNames(streamReader)}) из файла {path}");
+			}
+
 			if (GetFilePath("PRENBURTIS_DATA_BASE") is string dataSource) {
 				SqliteConnectionStringBuilder connectionStringBuilder = new() { Mode = SqliteOpenMode.ReadOnly, DataSource = dataSource };
 				using SqliteConnection connection = new(connectionStringBuilder.ConnectionString);
