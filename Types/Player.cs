@@ -7,5 +7,6 @@
 		public readonly string FirstName = firstName;
 
 		public string Link => $"[{this.FirstName}](tg://user?id={this.UserId})";
+		public override string ToString() => this.Link;
 	}
 }

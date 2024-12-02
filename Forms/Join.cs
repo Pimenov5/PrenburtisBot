@@ -55,14 +55,14 @@ namespace PrenburtisBot.Forms
 			}
 
 			for (int i = 0; i < teams.Length; i++) 
-				teams[i] = court.AddPlayer(player) is uint teamIndex ? $"{teamIndex + 1}" : null;
+				teams[i] = court.AddPlayer(player) is uint teamIndex ? $"#{teamIndex + 1}" + court.Teams[(int)teamIndex].FormatName() : null;
 
 			string text = teams.Length switch
 			{
-				1 => teams[0] is null ? "Нет свободных мест в командах на площадке" : "Вы были добавлены в команду #" + teams[0],
-				2 => teams[0] is null && teams[0] == teams[1] ? "Нет свободных мест в командах на площадке" : teams[1] is null ? "Вы были добавлены только в команду #" + teams[0]
-					: "Вы были добавлены в команду #" + teams[0] + " и #" + teams[1],
-				_ => "Вы были добавлены в команды под номерами: " + new StringBuilder().AppendJoin(' ', teams).ToString().TrimEnd().Replace(" ", ", ")
+				1 => teams[0] is null ? "Нет свободных мест в командах на площадке" : "Вы были добавлены в команду " + teams[0],
+				2 => teams[0] is null && teams[0] == teams[1] ? "Нет свободных мест в командах на площадке" : teams[1] is null ? "Вы были добавлены только в команду " + teams[0]
+					: "Вы были добавлены в команду " + teams[0] + " и " + teams[1],
+				_ => "Вы были добавлены в команды: " + new StringBuilder().AppendJoin('_', teams).ToString().TrimEnd('_').Replace("_", ", ")
 			};
 
 			if (court is RankedCourt) {

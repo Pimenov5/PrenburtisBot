@@ -32,7 +32,7 @@
 
 		public readonly long UserId;
 		public uint TeamMaxPlayerCount => _teamMaxPlayerCount;
-		public IEnumerable<Team> Teams => _teams;
+		public IReadOnlyList<Team> Teams => _teams;
 
 		public Court(long userId, List<Team> teams, uint teamMaxPlayerCount)
 		{

@@ -70,9 +70,11 @@ namespace PrenburtisBot.Forms
 			if (!await this.CanCreateCourtAsync(args))
 				return null;
 
+			string[] names = Team.Names;
+			Random? random = names.Length >= _teamCount ? new() : null;
 			List<Team> teams = [];
 			for (int i = 0; i < _teamCount; i++)
-				teams.Add(new Team());
+				teams.Add(new Team(random is null ? null : names[random.Next(names.Length)]));
 
 			Court court = _isRanked ?? throw new NullReferenceException() ? new RankedCourt(this.Device.DeviceId, teams, _teamMaxPlayerCount)
 				: new Court(this.Device.DeviceId, teams, _teamMaxPlayerCount);
