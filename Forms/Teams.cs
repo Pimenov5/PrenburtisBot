@@ -81,8 +81,13 @@ namespace PrenburtisBot.Forms
 			int courtId = Courts.Add(court);
 
 			ButtonForm buttonForm = new();
-			buttonForm.AddButtonRow(new ButtonBase("👀", new CallbackData(nameof(Players), courtId.ToString()).Serialize()),
-				new ButtonBase("🔀", new CallbackData(nameof(Shuffle), courtId.ToString()).Serialize()));
+			if (!this.Device.IsGroup)
+			{
+				string value = courtId.ToString();
+				buttonForm.AddButtonRow(new ButtonBase("✏️", new CallbackData(nameof(Edit), value).Serialize()),
+					new ButtonBase("🔀", new CallbackData(nameof(Shuffle), value).Serialize()),
+					new ButtonBase("👀", new CallbackData(nameof(Players), value).Serialize()));
+			}
 
 			await this.Device.Send(await GetLinkAsync(typeof(Join), courtId.ToString()), buttonForm);
 			return null;
