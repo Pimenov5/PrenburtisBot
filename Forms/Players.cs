@@ -32,7 +32,11 @@ namespace PrenburtisBot.Forms
 			int i = default;
 			foreach (Team team in teams)
 			{
-				stringBuilder.Append((team.Contains(this.Device.DeviceId) ? "ВАША КОМАНДА" : "Команда") + $" #{++i} ({team.PlayerCount}): ");
+				string value = $"Команда #{++i}{team.FormatName()} ({team.PlayerCount}): ";
+				if (team.Contains(this.Device.DeviceId))
+					value = ("Ваша " + value).ToUpper();
+
+				stringBuilder.Append(value);
 				stringBuilder.AppendJoin(", ", team.Players);
 				stringBuilder.AppendLine(Environment.NewLine);
 			}

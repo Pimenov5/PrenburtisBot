@@ -27,15 +27,16 @@ namespace PrenburtisBot.Forms
 
 				case true:
 					int[] indexes = court.RemovePlayer(this.Device.DeviceId);
-					for (int i = 0; i < indexes.Length; i++)
-						++indexes[i];
+					string[] teams = new string[indexes.Length];
+					for (int i = 0; i < teams.Length; i++)
+						teams[i] = (indexes[i] + 1).ToString() + court.Teams[indexes[i]].FormatName();
 
-					string text = indexes.Length switch
+					string text = teams.Length switch
 					{
 						0 => "Вы ещё не присоединились ни к одной команде на площадке",
-						1 => $"Вы вышли из команды #{indexes[0]}",
-						2 => $"Вы вышли из команды #{indexes[0]} и #{indexes[1]}",
-						_ => "Вы вышли из команд под номерами: " + new StringBuilder().AppendJoin(", ", indexes)
+						1 => $"Вы вышли из команды #{teams[0]}",
+						2 => $"Вы вышли из команды #{teams[0]} и #{teams[1]}",
+						_ => "Вы вышли из команд под номерами: " + new StringBuilder().AppendJoin(", ", teams)
 					};
 
 					return text;
