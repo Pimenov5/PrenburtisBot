@@ -32,7 +32,7 @@
 
 		public readonly long UserId;
 		public uint TeamMaxPlayerCount => _teamMaxPlayerCount;
-		public IReadOnlyList<Team> Teams => _teams;
+		public Team[] Teams => _teams.ToArray();
 
 		public Court(long userId, List<Team> teams, uint teamMaxPlayerCount)
 		{

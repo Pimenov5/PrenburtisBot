@@ -12,7 +12,7 @@ namespace PrenburtisBot.Forms
 			string? courtId = args.Length == 1 ? args[0] : args.Length == 2 && int.TryParse(args[1], out messageId) ? args[0] : null;
 			Court court = Courts.GetById(courtId);
 
-			IEnumerable<Team> teams = court.Teams;
+			Team[] teams = court.Teams;
 			int count = 0, maxCount = 0;
 			bool canSeePlayers = true;
 			foreach (Team team in teams)
@@ -38,7 +38,7 @@ namespace PrenburtisBot.Forms
 
 				stringBuilder.Append(value);
 				stringBuilder.AppendJoin(", ", team.Players);
-				stringBuilder.AppendLine(Environment.NewLine);
+				stringBuilder.AppendLine();
 			}
 
 			ButtonForm? buttonForm = null;
