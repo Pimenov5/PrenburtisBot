@@ -37,25 +37,29 @@ namespace PrenburtisBot.Types
 
 		public override async Task Render(MessageResult message)
 		{
-			if (this.Device.IsGroup)
-				return;
+			string[] args = message.BotCommandParameters.ToArray();
+			if (this.Device.IsGroup) {
+				if (!string.IsNullOrEmpty(message.BotCommand) && args.Length > 0 && args[^1].StartsWith('@') && args[^1] == "@" + (await this.Client.TelegramClient.GetMeAsync()).Username)
+					Array.Resize(ref args, args.Length - 1);
+				else
+					return;
+			}
 
-			string[] args = [];
 			if (_args.Length == 0)
 			{
-				args = message.BotCommandParameters.Count == 1 && message.BotCommandParameters[0].Contains(PARAMS_DELIMITER)
-					? message.BotCommandParameters[0].Split(PARAMS_DELIMITER)[1..] : message.BotCommandParameters.Count > 0 ? message.BotCommandParameters.ToArray()
+				args = args.Length == 1 && args[0].Contains(PARAMS_DELIMITER) ? args[0].Split(PARAMS_DELIMITER)[1..] : args.Length > 0 ? args
 					: string.IsNullOrEmpty(message.BotCommand) && !string.IsNullOrEmpty(message.Command) ? [message.Command] : [];
 			}
 			else
 			{
-				Array.Resize(ref args,_args.Length);
+				Array.Resize(ref args, _args.Length);
 				int index = 0;
 				for (int i = index; i < args.Length; i++)
 					if (_args[i].ToString() is string argument)
 						args[index++] = argument;
 
 				Array.Resize(ref args, index);
+				_args = [];
 			}
 
 			string? text;
