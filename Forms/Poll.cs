@@ -1,4 +1,4 @@
-﻿using PrenburtisBot.Types;
+﻿using PrenburtisBot.Attributes;
 using System.Globalization;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;

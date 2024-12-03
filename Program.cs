@@ -8,10 +8,11 @@ using Microsoft.Data.Sqlite;
 using Telegram.Bot;
 using TelegramBotBase;
 using System.Reflection;
+using PrenburtisBot.Attributes;
 
 namespace PrenburtisBot
 {
-	internal class Program
+    internal class Program
 	{
 		private static string? GetFilePath(string variable)
 		{
