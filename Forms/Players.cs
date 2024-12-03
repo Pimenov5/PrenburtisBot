@@ -47,7 +47,7 @@ namespace PrenburtisBot.Forms
 			if (i != default && !string.IsNullOrEmpty(courtId) && Environment.GetEnvironmentVariable("MESSAGE_ID_ALIAS") is string messageIdAlias)
 			{
 				buttonForm = new();
-				buttonForm.AddButtonRow(new ButtonBase("🔄", new CallbackData(nameof(Players), ParamsToString(courtId, messageIdAlias)).Serialize()));
+				buttonForm.AddButtonRow(new ButtonBase("🔄", new CallbackData(nameof(Players), Commands.ParamsToString(courtId, messageIdAlias)).Serialize()));
 			}
 
 			if (messageId != default)

@@ -1,6 +1,7 @@
 ﻿using PrenburtisBot.Attributes;
 using PrenburtisBot.Forms;
 using System.Reflection;
+using System.Text;
 using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Types
@@ -14,6 +15,9 @@ namespace PrenburtisBot.Types
 			foreach (Type type in types)
 				_commands.Add(type.Name.ToString().ToLower(), new KeyValuePair<Type, string?>(type, type.GetCustomAttribute<BotCommandAttribute>() is BotCommandAttribute attribute ? attribute.Description : null));
 		}
+
+		public const char PARAMS_DELIMITER = '-';
+		public static string ParamsToString(params string[] values) => values.Length == 0 ? string.Empty : new StringBuilder().AppendJoin(PARAMS_DELIMITER, values).ToString();
 
 		public static bool Contains(string command) => _commands.ContainsKey(command);
 		public static FormBase GetNewForm(string command) => _commands.TryGetValue(command, out KeyValuePair<Type, string?> type)
