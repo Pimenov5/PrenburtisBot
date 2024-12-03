@@ -89,8 +89,18 @@
 			int prevTeamCount = _teams.Count;
 			if (teamCount > prevTeamCount)
 			{
+				List<string> usedNames = [];
+				foreach (Team team in this.Teams)
+					if (!string.IsNullOrEmpty(team.Name))
+						usedNames.Add(team.Name);
+
+				List<string> names = usedNames.Count == 0 ? [] : new(Team.Names);
+				foreach (string name in usedNames)
+					names.Remove(name);
+
+				Random? random = names.Count >= teamCount - prevTeamCount ? new() : null;
 				for (int i = 0; i < teamCount - prevTeamCount; i++)
-					_teams.Add(new Team());
+					_teams.Add(new Team(random is null ? null : names[random.Next(names.Count)]));
 			}
 			else if (teamCount < prevTeamCount)
 			{
