@@ -1,9 +1,11 @@
 ﻿using Telegram.Bot.Types.ReplyMarkups;
 using PrenburtisBot.Types;
 using TelegramBotBase.Form;
+using PrenburtisBot.Attributes;
 
 namespace PrenburtisBot.Forms
 {
+	[BotCommand("Распределить игроков по командам")]
 	internal class Teams : LinkedForm
 	{
 		protected bool? _isRanked = null;
@@ -92,7 +94,5 @@ namespace PrenburtisBot.Forms
 			await this.Device.Send(await GetLinkAsync(typeof(Join), courtId.ToString()), buttonForm);
 			return null;
 		}
-
-		public static string Description => "Распределить игроков по командам";
 	}
 }

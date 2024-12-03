@@ -1,4 +1,6 @@
-﻿using PrenburtisBot.Forms;
+﻿using PrenburtisBot.Attributes;
+using PrenburtisBot.Forms;
+using System.Reflection;
 using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Types
@@ -10,7 +12,7 @@ namespace PrenburtisBot.Types
 		{
 			IEnumerable<Type> types = typeof(Start).Assembly.GetTypes().Where((Type type) => !type.Name.Contains('<') && type.Namespace is string typeNamespace && typeNamespace == typeof(Start).Namespace);
 			foreach (Type type in types)
-				_commands.Add(type.Name.ToString().ToLower(), new KeyValuePair<Type, string?>(type, (string?)(type.GetProperty("Description", typeof(string))?.GetValue(null) ?? null)));
+				_commands.Add(type.Name.ToString().ToLower(), new KeyValuePair<Type, string?>(type, type.GetCustomAttribute<BotCommandAttribute>() is BotCommandAttribute attribute ? attribute.Description : null));
 		}
 
 		public static bool Contains(string command) => _commands.ContainsKey(command);

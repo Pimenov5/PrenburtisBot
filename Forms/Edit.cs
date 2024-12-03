@@ -1,8 +1,10 @@
-﻿using PrenburtisBot.Types;
+﻿using PrenburtisBot.Attributes;
+using PrenburtisBot.Types;
 using System.Text;
 
 namespace PrenburtisBot.Forms
 {
+	[BotCommand("Редактировать площадку")]
 	internal class Edit : Teams
 	{
 		private string? _courtId = null;
@@ -58,7 +60,5 @@ namespace PrenburtisBot.Forms
 			await this.NavigateTo(new Players(), _courtId);
 			return null;
 		}
-
-		public static new string Description => "Редактировать площадку";
 	}
 }

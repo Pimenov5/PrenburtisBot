@@ -1,9 +1,11 @@
-﻿using PrenburtisBot.Types;
+﻿using PrenburtisBot.Attributes;
+using PrenburtisBot.Types;
 using System.Text;
 using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Forms
 {
+	[BotCommand("Список игроков на площадке")]
 	internal class Players : LinkedForm
 	{
 		protected override async Task<string?> RenderAsync(params string[] args)
@@ -54,7 +56,5 @@ namespace PrenburtisBot.Forms
 			await this.Device.Send(stringBuilder.ToString(), buttonForm);
 			return null;
 		}
-
-		public static string Description => "Список игроков на площадке";
 	}
 }

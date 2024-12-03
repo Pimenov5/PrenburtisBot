@@ -1,13 +1,14 @@
-﻿using PrenburtisBot.Types;
+﻿using PrenburtisBot.Attributes;
+using PrenburtisBot.Types;
 using System.Text;
 using TelegramBotBase.Args;
 using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Forms
 {
+	[BotCommand("Узнать номер своей команды")]
 	internal class Join : LinkedForm
 	{
-		public static string Description => "Узнать номер своей команды";
 		protected override async Task<string?> RenderAsync(params string[] args)
 		{
 			bool? isConfirmed = null;

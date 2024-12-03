@@ -1,10 +1,12 @@
-﻿using PrenburtisBot.Types;
+﻿using PrenburtisBot.Attributes;
+using PrenburtisBot.Types;
 using System.Text;
 using TelegramBotBase.Args;
 using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Forms
 {
+	[BotCommand("Выйти из всех команд на площадке")]
 	internal class Leave : LinkedForm
 	{
 		protected override async Task<string?> RenderAsync(params string[] args)
@@ -48,7 +50,5 @@ namespace PrenburtisBot.Forms
 
 			}
 		}
-
-		public static string Description => "Выйти из всех команд на площадке";
 	}
 }
