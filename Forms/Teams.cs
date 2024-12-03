@@ -6,7 +6,7 @@ using PrenburtisBot.Attributes;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Распределить игроков по командам")]
-	internal class Teams : LinkedForm
+	internal class Teams : BotCommandFormBase
 	{
 		protected bool? _isRanked = null;
 		protected uint _teamCount = default, _teamMaxPlayerCount = default;
@@ -91,7 +91,7 @@ namespace PrenburtisBot.Forms
 					new ButtonBase("👀", new CallbackData(nameof(Players), value).Serialize()));
 			}
 
-			await this.Device.Send(await GetLinkAsync(typeof(Join), courtId.ToString()), buttonForm);
+			await this.Device.Send(await Start.GetDeepLinkAsync(this.Client.TelegramClient, typeof(Join), courtId.ToString()), buttonForm);
 			return null;
 		}
 	}
