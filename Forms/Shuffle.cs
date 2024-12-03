@@ -4,7 +4,7 @@ using PrenburtisBot.Types;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Перемешать игроков в командах")]
-	internal class Shuffle : LinkedForm
+	internal class Shuffle : BotCommandFormBase
 	{
 		protected override async Task<string?> RenderAsync(string[] args)
 		{

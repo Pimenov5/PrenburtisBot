@@ -6,7 +6,7 @@ using TelegramBotBase.Form;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Список игроков на площадке")]
-	internal class Players : LinkedForm
+	internal class Players : BotCommandFormBase
 	{
 		protected override async Task<string?> RenderAsync(params string[] args)
 		{
