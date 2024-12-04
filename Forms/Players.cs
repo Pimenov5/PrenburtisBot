@@ -16,7 +16,7 @@ namespace PrenburtisBot.Forms
 
 			Team[] teams = court.Teams;
 			int count = 0, maxCount = 0;
-			bool canSeePlayers = true;
+			bool canSeePlayers = false;
 			foreach (Team team in teams)
 			{
 				count += team.PlayerCount;
