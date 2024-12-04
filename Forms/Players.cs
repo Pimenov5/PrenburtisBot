@@ -8,7 +8,7 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Список игроков на площадке")]
 	internal class Players : BotCommandFormBase
 	{
-		protected override async Task<string?> RenderAsync(params string[] args)
+		protected override async Task<string?> RenderAsync(long userId, params string[] args)
 		{
 			int messageId = default;
 			string? courtId = args.Length == 1 ? args[0] : args.Length == 2 && int.TryParse(args[1], out messageId) ? args[0] : null;
@@ -21,10 +21,10 @@ namespace PrenburtisBot.Forms
 			{
 				count += team.PlayerCount;
 				maxCount += (int)court.TeamMaxPlayerCount;
-				canSeePlayers = canSeePlayers ? canSeePlayers : team.Contains(this.Device.DeviceId);
+				canSeePlayers = canSeePlayers ? canSeePlayers : team.Contains(userId);
 			}
 
-			canSeePlayers = canSeePlayers ? canSeePlayers : this.Device.DeviceId == court?.UserId;
+			canSeePlayers = canSeePlayers ? canSeePlayers : userId == court?.UserId;
 			if (!canSeePlayers)
 				return "Просматривать игроков на площадке могут только присоединившиеся и её создатель";
 			else if (count == 0)
@@ -35,7 +35,7 @@ namespace PrenburtisBot.Forms
 			foreach (Team team in teams)
 			{
 				string value = $"Команда #{++i}{team.FormatName()} ({team.PlayerCount}): ";
-				if (team.Contains(this.Device.DeviceId))
+				if (team.Contains(userId))
 					value = ("Ваша " + value).ToUpper();
 
 				stringBuilder.Append(value);

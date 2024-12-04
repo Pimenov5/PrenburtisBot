@@ -9,7 +9,7 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Узнать номер своей команды")]
 	internal class Join : BotCommandFormBase
 	{
-		protected override async Task<string?> RenderAsync(params string[] args)
+		protected override async Task<string?> RenderAsync(long userId, params string[] args)
 		{
 			bool? isConfirmed = null;
 			string?[] teams = new string?[1];
@@ -30,8 +30,8 @@ namespace PrenburtisBot.Forms
 			string? courtId = args.Length >= 1 ? args[0] : null;
 			Court court = Courts.GetById(courtId);
 
-			string firstName = (await this.Device.GetChatUser(this.Device.DeviceId)).User.FirstName;
-			Player player = Users.GetPlayer(this.Device.DeviceId, firstName);
+			string firstName = (await this.Device.GetChatUser(userId)).User.FirstName;
+			Player player = Users.GetPlayer(userId, firstName);
 			if (court is RankedCourt && player.Rank == default && court.ContainsPlayer(player.UserId))
 			{
 				if (isConfirmed is null)

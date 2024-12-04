@@ -1,4 +1,5 @@
 ﻿using Telegram.Bot;
+using Telegram.Bot.Types;
 using TelegramBotBase.Base;
 using TelegramBotBase.Form;
 
@@ -8,7 +9,7 @@ namespace PrenburtisBot.Types
 	{
 		private object[] _args = [];
 
-		protected virtual async Task<string?> RenderAsync(params string[] args) { return null; }
+		protected virtual async Task<string?> RenderAsync(long userId, params string[] args) { return null; }
 
 		public BotCommandFormBase() => this.Init += async (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
 		{
@@ -45,7 +46,7 @@ namespace PrenburtisBot.Types
 			string? text;
 			try
 			{
-				text = await RenderAsync(args);
+				text = await RenderAsync(this.Device.IsGroup && message.Message is Message messageFrom && messageFrom.From is User user ? user.Id : this.Device.DeviceId, args);
 			}
 			catch (Exception e)
 			{

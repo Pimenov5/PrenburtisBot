@@ -10,12 +10,12 @@ namespace PrenburtisBot.Forms
 		private string? _courtId = null;
 		private Court? _court = null;
 
-		protected override async Task<string?> RenderAsync(params string[] args)
+		protected override async Task<string?> RenderAsync(long userId, params string[] args)
 		{
 			_courtId = _court is not null ? _courtId : args.Length > 0 ? args[0] : null;
 			_court ??= Courts.GetById(_courtId);
 
-			if (_court.UserId != this.Device.DeviceId)
+			if (_court.UserId != userId)
 				return "Редактировать площадку может только её создатель";
 
 			if (!await this.CanCreateCourtAsync(args.Length > 0 && args[0] == _courtId ? args[1..] : args))

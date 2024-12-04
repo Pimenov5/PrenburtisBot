@@ -9,7 +9,7 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Выйти из всех команд на площадке")]
 	internal class Leave : BotCommandFormBase
 	{
-		protected override async Task<string?> RenderAsync(params string[] args)
+		protected override async Task<string?> RenderAsync(long userId, params string[] args)
 		{
 			string? courtId = args.Length >= 1 ? args[0] : null;
 			Court court = Courts.GetById(courtId);
@@ -28,7 +28,7 @@ namespace PrenburtisBot.Forms
 					return null;
 
 				case true:
-					int[] indexes = court.RemovePlayer(this.Device.DeviceId);
+					int[] indexes = court.RemovePlayer(userId);
 					string[] teams = new string[indexes.Length];
 					for (int i = 0; i < teams.Length; i++)
 						teams[i] = (indexes[i] + 1).ToString() + court.Teams[indexes[i]].FormatName();

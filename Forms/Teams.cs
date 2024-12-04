@@ -67,7 +67,7 @@ namespace PrenburtisBot.Forms
 			return false;
 		}
 
-		protected override async Task<string?> RenderAsync(params string[] args)
+		protected override async Task<string?> RenderAsync(long userId, params string[] args)
 		{
 			if (!await this.CanCreateCourtAsync(args))
 				return null;
@@ -78,8 +78,8 @@ namespace PrenburtisBot.Forms
 			for (int i = 0; i < _teamCount; i++)
 				teams.Add(new Team(random is null ? null : names[random.Next(names.Length)]));
 
-			Court court = _isRanked ?? throw new NullReferenceException() ? new RankedCourt(this.Device.DeviceId, teams, _teamMaxPlayerCount)
-				: new Court(this.Device.DeviceId, teams, _teamMaxPlayerCount);
+			Court court = _isRanked ?? throw new NullReferenceException() ? new RankedCourt(userId, teams, _teamMaxPlayerCount)
+				: new Court(userId, teams, _teamMaxPlayerCount);
 			int courtId = Courts.Add(court);
 
 			ButtonForm buttonForm = new();
