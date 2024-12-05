@@ -1,5 +1,4 @@
 ﻿using TelegramBotBase.Builder;
-using TelegramBotBase.Commands;
 using PrenburtisBot.Forms;
 using TelegramBotBase.Args;
 using TelegramBotBase.Form;
@@ -7,8 +6,6 @@ using PrenburtisBot.Types;
 using Microsoft.Data.Sqlite;
 using Telegram.Bot;
 using TelegramBotBase;
-using System.Reflection;
-using PrenburtisBot.Attributes;
 
 namespace PrenburtisBot
 {
@@ -73,14 +70,7 @@ namespace PrenburtisBot
 				.CustomCommands(action =>
 				{
 					foreach (var command in Commands.GetCommands())
-						if (command.Value is string description)
-							if (typeof(Start).Assembly.GetType(typeof(Start).Namespace + '.' + command.Key, false, true) is Type type)
-							{
-								if (type.GetCustomAttribute(typeof(GroupAdminCommandAttribute)) is null)
-									action.AddPrivateChatCommand(command.Key, description);
-								else
-									action.AddGroupAdminCommand(command.Key, description);
-							}
+						action.Add(command.Key, command.Value);
 				})
 				.NoSerialization()
 				.UseRussian()
