@@ -7,8 +7,7 @@ using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Forms
 {
-    [GroupAdminCommand]
-    [BotCommand("Создать опрос для переклички")]
+    [BotCommand("Создать опрос для переклички", BotCommandScopeType.AllChatAdministrators)]
     internal class Poll : GroupForm
     {
         public override async Task Render(MessageResult message)
