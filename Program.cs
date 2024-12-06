@@ -108,6 +108,7 @@ namespace PrenburtisBot
 				await args.Device.ActiveForm.NavigateTo(newForm);
 			};
 
+			Login.LoginEvent += (Type? type, WTelegram.Client client) => { Add.TelegramClient = client; };
 			await bot.UploadBotCommands();
 
 			await bot.Start();
