@@ -58,6 +58,22 @@
 			return (uint)_teams.IndexOf(team);
 		}
 
+		public virtual uint?[] AddPlayers(IEnumerable<Player> collection)
+		{
+			Random random = new();
+			List<Player> players = new(collection);
+			uint?[] result = new uint?[players.Count];
+
+			for (int i = 0; i < players.Count; i++)
+			{
+				int index = random.Next(players.Count);
+				result[i] = this.AddPlayer(players[index], random);
+				players.RemoveAt(index);
+			}
+
+			return result;
+		}
+
 		public int[] RemovePlayer(long userId, bool userLeaved = true)
 		{
 			int[] result = new int[_teams.Count];

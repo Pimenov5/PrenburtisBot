@@ -27,5 +27,30 @@
 
 			return teams;
 		}
+
+		public override uint?[] AddPlayers(IEnumerable<Player> collection)
+		{
+			List<Player> players = new(collection);
+			players.Sort((Player x, Player y) => x.Rank.CompareTo(y.Rank));
+			uint?[] result = new uint?[players.Count];
+
+			int i = -1;
+			Random random = new();
+			Dictionary<uint, List<Player>> teams = [];
+			foreach (Player player in players)
+			{
+				result[++i] = this.AddPlayer(player, random);
+				if (result[i] is uint index)
+				{
+					teams.TryAdd(index, []);
+					teams[index].Add(player);
+				}
+			}
+
+			foreach (uint index in teams.Keys)
+				this.Teams[index].Shuffle(teams[index].ToArray(), random);
+
+			return result;
+        }
 	}
 }
