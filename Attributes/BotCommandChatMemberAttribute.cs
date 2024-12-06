@@ -2,7 +2,7 @@
 
 namespace PrenburtisBot.Attributes
 {
-	internal class BotCommandChatMemberAttribute(string description, ChatId chatId, long userId) : BotCommandChatAttribute(description, chatId)
+	internal class BotCommandChatMemberAttribute(string description, string? chatId, long userId) : BotCommandChatAttribute(description, chatId)
 	{
 		public readonly long UserId = userId;
 	}

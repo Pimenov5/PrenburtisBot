@@ -13,6 +13,7 @@ namespace PrenburtisBot.Types
 	{
 		private static readonly Dictionary<string, Type> _types = [];
 		private static readonly Dictionary<BotCommandScope, List<BotCommand>> _commands = [];
+
 		static Commands()
 		{
 			IEnumerable<Type> types = typeof(Start).Assembly.GetTypes().Where((Type type) => !type.Name.Contains('<') && type.Namespace is string typeNamespace && typeNamespace == typeof(Start).Namespace);
@@ -34,9 +35,9 @@ namespace PrenburtisBot.Types
 					BotCommandScopeType.AllPrivateChats => new BotCommandScopeAllPrivateChats(),
 					BotCommandScopeType.AllGroupChats => new BotCommandScopeAllGroupChats(),
 					BotCommandScopeType.AllChatAdministrators => new BotCommandScopeAllChatAdministrators(),
-					BotCommandScopeType.Chat => new BotCommandScopeChat() { ChatId = ((BotCommandChatAttribute)attribute).ChatId },
-					BotCommandScopeType.ChatAdministrators => new BotCommandScopeChatAdministrators() { ChatId = ((BotCommandChatAttribute)attribute).ChatId },
-					BotCommandScopeType.ChatMember => new BotCommandScopeChatMember() { ChatId = ((BotCommandChatAttribute)attribute).ChatId, UserId = ((BotCommandChatMemberAttribute)attribute).UserId }
+					BotCommandScopeType.Chat => new BotCommandScopeChat() { ChatId = GetChatId((BotCommandChatAttribute)attribute, type) },
+					BotCommandScopeType.ChatAdministrators => new BotCommandScopeChatAdministrators() { ChatId = GetChatId((BotCommandChatAttribute)attribute, type) },
+					BotCommandScopeType.ChatMember => new BotCommandScopeChatMember() { ChatId = GetChatId((BotCommandChatAttribute)attribute, type), UserId = ((BotCommandChatMemberAttribute)attribute).UserId }
 				};
 
 				_commands.TryAdd(botCommandScope, []);
@@ -45,6 +46,27 @@ namespace PrenburtisBot.Types
 
 				_types.Add(botCommand.Command, type);
 			}
+		}
+
+		public static ChatId GetChatId(BotCommandChatAttribute attribute, Type type)
+		{
+			static bool TryParseChatId(string? value, out ChatId? result)
+			{
+				if (long.TryParse(value, out long chatId))
+					result = chatId;
+				else if (!string.IsNullOrEmpty(value))
+					result = value;
+				else
+					result = null;
+
+				return result is not null;
+			}
+
+			if (!TryParseChatId(attribute.ChatId, out ChatId? result))
+				if (Environment.GetEnvironmentVariable((type.Name + "_CHAT_ID").ToUpper()) is string value)
+					TryParseChatId(value, out result);
+
+			return result ?? throw new NullReferenceException();
 		}
 
 		public const char PARAMS_DELIMITER = '-';

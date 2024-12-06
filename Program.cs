@@ -6,6 +6,10 @@ using PrenburtisBot.Types;
 using Microsoft.Data.Sqlite;
 using Telegram.Bot;
 using TelegramBotBase;
+using PrenburtisBot.Attributes;
+using System.Reflection;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace PrenburtisBot
 {
@@ -15,7 +19,7 @@ namespace PrenburtisBot
 		{
 			if (Environment.GetEnvironmentVariable(variable) is string path)
 			{
-				if (File.Exists(path))
+				if (System.IO.File.Exists(path))
 					return path;
 				else
 					Console.WriteLine($"Не существует файл {path}");
@@ -86,6 +90,21 @@ namespace PrenburtisBot
 			bot.BotCommand += async (object sender, BotCommandEventArgs args) =>
 			{
 				FormBase newForm = Commands.GetNewForm(args.Command.StartsWith('/') ? args.Command[1..] : args.Command);
+				Type type = newForm.GetType();
+				if (type.GetCustomAttribute<BotCommandAttribute>() is BotCommandAttribute commandAttribute)
+					switch (commandAttribute.Scope)
+					{
+						case BotCommandScopeType.Chat when commandAttribute is BotCommandChatAttribute attribute 
+							&& Commands.GetChatId(attribute, type) is ChatId chatId && chatId != args.DeviceId:
+
+						case BotCommandScopeType.AllChatAdministrators when args.Device.IsGroup && args.OriginalMessage.From?.Id is long userId
+							&& ! new List<ChatMember>(await args.Device.Api(async (botClient) => await botClient.GetChatAdministratorsAsync(args.DeviceId))).Any((ChatMember member) => member.User.Id == userId):
+
+							Console.WriteLine($"Предотвращён вызов формы {type.Name} пользователем {args.OriginalMessage.From?.FirstName} в чате \"{args.Device.GetChatTitle()}\"");
+							return;
+
+					};
+
 				await args.Device.ActiveForm.NavigateTo(newForm);
 			};
 
