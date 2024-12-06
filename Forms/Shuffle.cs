@@ -6,12 +6,12 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Перемешать игроков в командах")]
 	internal class Shuffle : BotCommandFormBase
 	{
-		protected override async Task<string?> RenderAsync(long userId, string[] args)
+		protected override async Task<TextMessage?> RenderAsync(long userId, string[] args)
 		{
 			string? courtId = args.Length == 1 ? args[0] : null;
 			Court court = Courts.GetById(courtId);
 			if (court.UserId != userId)
-				return "Только создатель площадки может перемешивать игроков в командах";
+				return new("Только создатель площадки может перемешивать игроков в командах");
 
 			court.Shuffle();
 			await this.NavigateTo(new Players(), courtId);

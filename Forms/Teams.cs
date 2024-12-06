@@ -67,7 +67,7 @@ namespace PrenburtisBot.Forms
 			return false;
 		}
 
-		protected override async Task<string?> RenderAsync(long userId, params string[] args)
+		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
 			if (!await this.CanCreateCourtAsync(args))
 				return null;
@@ -91,8 +91,8 @@ namespace PrenburtisBot.Forms
 					new ButtonBase("👀", new CallbackData(nameof(Players), value).Serialize()));
 			}
 
-			await this.Device.Send(await Start.GetDeepLinkAsync(this.Client.TelegramClient, typeof(Join), courtId.ToString()), buttonForm);
-			return null;
+			string text = await Start.GetDeepLinkAsync(this.Client.TelegramClient, typeof(Join), courtId.ToString());
+			return new(text) { Buttons = buttonForm };
 		}
 	}
 }

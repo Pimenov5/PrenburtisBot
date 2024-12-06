@@ -9,7 +9,7 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Узнать номер своей команды")]
 	internal class Join : BotCommandFormBase
 	{
-		protected override async Task<string?> RenderAsync(long userId, params string[] args)
+		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
 			bool? isConfirmed = null;
 			string?[] teams = new string?[1];
@@ -18,7 +18,7 @@ namespace PrenburtisBot.Forms
 				if (int.TryParse(args[1], out int intValue))
 				{
 					if (intValue <= 0)
-						return "Число присоединений к площадке должно быть больше нуля";
+						return new("Число присоединений к площадке должно быть больше нуля");
 					else
 						Array.Resize(ref teams, intValue);
 				}
@@ -77,8 +77,7 @@ namespace PrenburtisBot.Forms
 			buttonForm?.AddButtonRow(new ButtonBase("👀", new CallbackData(nameof(Players), courtId).Serialize()),
 				new ButtonBase("❌", new CallbackData(nameof(Leave), courtId).Serialize()));
 
-			await this.Device.Send(text, buttonForm);
-			return null;
+			return new(text) { Buttons = buttonForm };
 		}
 	}
 }

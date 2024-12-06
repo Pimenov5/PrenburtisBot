@@ -9,7 +9,7 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Выйти из всех команд на площадке")]
 	internal class Leave : BotCommandFormBase
 	{
-		protected override async Task<string?> RenderAsync(long userId, params string[] args)
+		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
 			string? courtId = args.Length >= 1 ? args[0] : null;
 			Court court = Courts.GetById(courtId);
@@ -33,15 +33,13 @@ namespace PrenburtisBot.Forms
 					for (int i = 0; i < teams.Length; i++)
 						teams[i] = (indexes[i] + 1).ToString() + court.Teams[indexes[i]].FormatName();
 
-					string text = teams.Length switch
+					return new TextMessage(teams.Length switch
 					{
 						0 => "Вы ещё не присоединились ни к одной команде на площадке",
 						1 => $"Вы вышли из команды #{teams[0]}",
 						2 => $"Вы вышли из команды #{teams[0]} и #{teams[1]}",
 						_ => "Вы вышли из команд под номерами: " + new StringBuilder().AppendJoin(", ", teams)
-					};
-
-					return text;
+					});
 
 				case false:
 					await this.Device.Send("Вы отменили выход из команд на площадке");

@@ -8,7 +8,7 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Список игроков на площадке")]
 	internal class Players : BotCommandFormBase
 	{
-		protected override async Task<string?> RenderAsync(long userId, params string[] args)
+		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
 			int messageId = default;
 			string? courtId = args.Length == 1 ? args[0] : args.Length == 2 && int.TryParse(args[1], out messageId) ? args[0] : null;
@@ -26,7 +26,7 @@ namespace PrenburtisBot.Forms
 
 			canSeePlayers = canSeePlayers ? canSeePlayers : userId == court?.UserId;
 			if (!canSeePlayers)
-				return "Просматривать игроков на площадке могут только присоединившиеся и её создатель";
+				return new("Просматривать игроков на площадке могут только присоединившиеся и её создатель");
 			else if (count == 0)
 				teams = [];
 
@@ -53,8 +53,7 @@ namespace PrenburtisBot.Forms
 			if (messageId != default)
 				await this.Device.DeleteMessage(messageId);
 
-			await this.Device.Send(stringBuilder.ToString(), buttonForm);
-			return null;
+			return new(stringBuilder.ToString()) { Buttons = buttonForm };
 		}
 	}
 }

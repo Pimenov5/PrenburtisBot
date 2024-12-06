@@ -9,7 +9,7 @@ namespace PrenburtisBot.Types
 	{
 		private object[] _args = [];
 
-		protected virtual async Task<string?> RenderAsync(long userId, params string[] args) { return null; }
+		protected virtual async Task<TextMessage?> RenderAsync(long userId, params string[] args) { return null; }
 
 		public BotCommandFormBase() => this.Init += async (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
 		{
@@ -43,18 +43,22 @@ namespace PrenburtisBot.Types
 				_args = [];
 			}
 
-			string? text;
+			TextMessage? textMessage;
 			try
 			{
-				text = await RenderAsync(this.Device.IsGroup && message.Message is Message messageFrom && messageFrom.From is User user ? user.Id : this.Device.DeviceId, args);
+				textMessage = await RenderAsync(this.Device.IsGroup && message.Message is Message messageFrom && messageFrom.From is User user ? user.Id : this.Device.DeviceId, args);
 			}
 			catch (Exception e)
 			{
-				text = e.Message;
+				textMessage = new(e.Message);
 			}
 
-			if (!string.IsNullOrEmpty(text))
-				await this.Device.Send(text);
+			if (textMessage is not null)
+			{
+				if (this.Device.IsGroup)
+					textMessage.Buttons = null;
+				await this.Device.Send(textMessage.Text, textMessage.Buttons, textMessage.ReplyTo, textMessage.DisableNotification, textMessage.ParseMode, textMessage.MarkdownV2AutoEscape);
+			}
 		}
 
 		public override async Task Action(MessageResult message)
