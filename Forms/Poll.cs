@@ -10,6 +10,8 @@ namespace PrenburtisBot.Forms
     [BotCommand("Создать опрос для переклички", BotCommandScopeType.AllChatAdministrators)]
     internal class Poll : GroupForm
     {
+        public const string PLAYER_JOINED = "Иду";
+        public const byte PLAYER_JOINED_BYTE = 48;
         public override async Task Render(MessageResult message)
         {
             Exception? exception = null;
@@ -17,7 +19,7 @@ namespace PrenburtisBot.Forms
             {
                 Telegram.Bot.Types.Message pollMessage = await Device.Api(async (botClient) => await botClient.SendPollAsync(Device.DeviceId,
                     $"Перекличка на волейбол ЗАВТРА ({DateTime.Today.AddDays(1).ToString("dddd", CultureInfo.GetCultureInfo("ru-RU"))})",
-                    ["Иду", "Не иду - уступаю своё место", "👀"], isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false));
+                    [PLAYER_JOINED, "Не иду - уступаю своё место", "👀"], isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false));
 
                 await Device.Api(async (botClient) => await botClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId));
             }

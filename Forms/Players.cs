@@ -35,7 +35,7 @@ namespace PrenburtisBot.Forms
 			foreach (Team team in teams)
 			{
 				string value = $"Команда #{++i}{team.FormatName()} ({team.PlayerCount}): ";
-				if (team.Contains(userId))
+				if (!this.Device.IsGroup && team.Contains(userId))
 					value = ("Ваша " + value).ToUpper();
 
 				stringBuilder.Append(value);
