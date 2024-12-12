@@ -33,6 +33,7 @@
 		public readonly long UserId;
 		public uint TeamMaxPlayerCount => _teamMaxPlayerCount;
 		public Team[] Teams => _teams.ToArray();
+		public int TeamCount => _teams.Count;
 
 		public Court(long userId, List<Team> teams, uint teamMaxPlayerCount)
 		{
