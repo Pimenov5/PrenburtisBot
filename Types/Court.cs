@@ -137,8 +137,8 @@
 					team.RemovePlayers(index, count);
 				}
 
-			foreach (Player player in players)
-				this.AddPlayer(player);
+			if (players.Count > 0)
+				this.AddPlayers(players);
 		}
 
 		public bool Shuffle()
@@ -154,16 +154,7 @@
 			if (players.Count == 0)
 				return false;
 
-			Random random = new();
-			while (players.Count > 0)
-			{
-				Player player = players[random.Next(players.Count)];
-				if (this.AddPlayer(player, random) is null)
-					throw new NullReferenceException($"Не удалось добавить игрока {player.FirstName}");
-
-				players.Remove(player);
-			}
-
+			this.AddPlayers(players);
 			return true;
 		}
 	}
