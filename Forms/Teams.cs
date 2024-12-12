@@ -8,6 +8,8 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Распределить игроков по командам")]
 	internal class Teams : BotCommandFormBase
 	{
+		private bool _isShowingKeyboard = false;
+
 		protected bool? _isRanked = null;
 		protected uint _teamCount = default, _teamMaxPlayerCount = default;
 
@@ -46,6 +48,7 @@ namespace PrenburtisBot.Forms
 				foreach (string button in buttons)
 					keyboardButtons.Add(new KeyboardButton(button));
 
+				_isShowingKeyboard = true;
 				await this.Device.Send(text, new ReplyKeyboardMarkup(keyboardButtons) { ResizeKeyboard = true });
 			}
 			else if (_isRanked is null)
@@ -56,11 +59,13 @@ namespace PrenburtisBot.Forms
 					await confirmDialog.NavigateTo(this, _teamCount, _teamMaxPlayerCount, eventArgs.Button.Value);
 				};
 
+				_isShowingKeyboard = false;
 				await this.NavigateTo(confirmDialog);
 			}
 			else
 			{
-				await this.Device.HideReplyKeyboard();
+				if (_isShowingKeyboard)
+					await this.Device.HideReplyKeyboard();
 				return true;
 			}
 
