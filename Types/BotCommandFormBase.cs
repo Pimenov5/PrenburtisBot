@@ -18,7 +18,10 @@ namespace PrenburtisBot.Types
 
 		public override async Task Render(MessageResult message)
 		{
-			string[] args = message.BotCommandParameters.ToArray();
+			List<string> botCommandParameters = message.BotCommandParameters;
+			botCommandParameters.RemoveAll((string value) => string.IsNullOrEmpty(value));
+			string[] args = botCommandParameters.ToArray();
+
 			if (this.Device.IsGroup) {
 				if (!string.IsNullOrEmpty(message.BotCommand) && args.Length > 0 && args[^1].StartsWith('@') && args[^1] == "@" + (await this.Client.TelegramClient.GetMeAsync()).Username)
 					Array.Resize(ref args, args.Length - 1);
