@@ -46,7 +46,7 @@ namespace PrenburtisBot
 					connection.Open();
 					Console.WriteLine($"Установлено соединение с {connection.DataSource}");
 
-					SqliteCommand command = new("SELECT * FROM users", connection);
+					SqliteCommand command = new("SELECT telegram_id, first_name, rank, rating FROM users", connection);
 					SqliteDataReader reader = command.ExecuteReader();
 					Console.WriteLine($"Добавлено ранговых игроков: {Users.Read(reader)}");
 
