@@ -12,7 +12,7 @@ namespace PrenburtisBot.Forms
 		{
 			int messageId = default;
 			string? courtId = args.Length == 1 ? args[0] : args.Length == 2 && int.TryParse(args[1], out messageId) ? args[0] : null;
-			Court court = Courts.GetById(courtId);
+			Court court = Courts.GetById(ref courtId, userId);
 
 			Team[] teams = court.Teams;
 			int count = 0, maxCount = 0;

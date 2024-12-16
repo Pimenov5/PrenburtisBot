@@ -23,7 +23,7 @@ namespace PrenburtisBot.Forms
 			Court court;
 			try
 			{
-				court = Courts.GetById(courtId);
+				court = Courts.GetById(ref courtId, message.Message.From?.Id);
 			}
 			catch
 			{

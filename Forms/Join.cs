@@ -28,7 +28,7 @@ namespace PrenburtisBot.Forms
 			}
 
 			string? courtId = args.Length >= 1 ? args[0] : null;
-			Court court = Courts.GetById(courtId);
+			Court court = Courts.GetById(ref courtId, userId);
 
 			string firstName = (await this.Device.GetChatUser(userId)).User.FirstName;
 			Player player = Users.GetPlayer(userId, firstName);

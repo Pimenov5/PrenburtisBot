@@ -13,7 +13,7 @@ namespace PrenburtisBot.Forms
 		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
 			_courtId = _court is not null ? _courtId : args.Length > 0 ? args[0] : null;
-			_court ??= Courts.GetById(_courtId);
+			_court ??= Courts.GetById(ref _courtId, userId);
 
 			if (_court.UserId != userId)
 				return new("Редактировать площадку может только её создатель");

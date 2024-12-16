@@ -12,7 +12,7 @@ namespace PrenburtisBot.Forms
 		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
 			string? courtId = args.Length >= 1 ? args[0] : null;
-			Court court = Courts.GetById(courtId);
+			Court court = Courts.GetById(ref courtId, userId);
 
 			bool? isConfirmed = 1 <= args.Length && args.Length <= 2 && bool.TryParse(args[^1], out bool value) ? value : null;
 			switch (isConfirmed) {
