@@ -17,11 +17,11 @@ namespace PrenburtisBot.Types
 			int count = 0;
 			while (reader.HasRows && reader.Read())
 			{
-				const int FIELD_COUNT = 3;
+				const int FIELD_COUNT = 4;
 				if (reader.FieldCount != FIELD_COUNT)
 					throw new ArgumentOutOfRangeException(nameof(reader), $"Количество полей в запросе должно быть равно {FIELD_COUNT}");
 
-				_players.Add(new Player(reader.GetInt64(0), reader.GetInt32(2), reader.GetString(1)));
+				_players.Add(new Player(reader.GetInt64(0), reader.GetInt32(2), reader.GetString(1), reader.GetDouble(3)));
 				++count;
 			}
 
@@ -30,7 +30,7 @@ namespace PrenburtisBot.Types
 
 		public static Player GetPlayer(long userId, string firstName)
 		{
-			Player player = new(userId, default, firstName);
+			Player player = new(userId, default, firstName, default);
 			return _players.TryGetValue(player, out Player? result) ? result : player;
 		}
 	}
