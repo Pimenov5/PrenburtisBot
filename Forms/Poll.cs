@@ -19,7 +19,7 @@ namespace PrenburtisBot.Forms
             {
                 Telegram.Bot.Types.Message pollMessage = await Device.Api(async (botClient) => await botClient.SendPollAsync(Device.DeviceId,
                     $"Перекличка на волейбол ЗАВТРА ({DateTime.Today.AddDays(1).ToString("dddd", CultureInfo.GetCultureInfo("ru-RU"))})",
-                    [PLAYER_JOINED, "Не иду - уступаю своё место", "👀"], isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false));
+                    [PLAYER_JOINED, "Не иду - уступаю своё место", "👀"], message.Message.MessageThreadId, isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false));
 
                 await Device.Api(async (botClient) => await botClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId));
             }
