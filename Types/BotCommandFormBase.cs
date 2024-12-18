@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotBase.Base;
 using TelegramBotBase.Form;
 
@@ -58,9 +59,9 @@ namespace PrenburtisBot.Types
 
 			if (textMessage is not null)
 			{
-				if (this.Device.IsGroup)
-					textMessage.Buttons = null;
-				await this.Device.Send(textMessage.Text, textMessage.Buttons, textMessage.ReplyTo, textMessage.DisableNotification, textMessage.ParseMode, textMessage.MarkdownV2AutoEscape);
+				InlineKeyboardMarkup? inlineKeyboardMarkup = this.Device.IsGroup ? null : textMessage.Buttons;
+				await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, textMessage.Text, message.Message.MessageThreadId,
+					textMessage.ParseMode, replyMarkup: inlineKeyboardMarkup));
 			}
 		}
 

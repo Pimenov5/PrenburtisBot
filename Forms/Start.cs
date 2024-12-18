@@ -22,7 +22,8 @@ namespace PrenburtisBot.Forms
 			if (this.Device.IsGroup)
 				return;
 
-			await this.Device.Send("Введите команду или выберите из меню");
+			await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, "Введите команду или выберите из меню",
+				message.Message.MessageThreadId));
 		}
 
 		public static async Task<string> GetDeepLinkAsync(ITelegramBotClient botClient, Type type, params string[] args) => $"t.me/{(await botClient.GetMeAsync()).Username}"

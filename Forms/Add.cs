@@ -5,6 +5,7 @@ using Telegram.Bot.Types.Enums;
 using TelegramBotBase.Base;
 using TelegramBotBase.Form;
 using TL;
+using Telegram.Bot;
 
 namespace PrenburtisBot.Forms
 {
@@ -99,7 +100,7 @@ namespace PrenburtisBot.Forms
 
             if (!string.IsNullOrEmpty(text))
             {
-				await this.Device.Send(text);
+				await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, text, message.Message.MessageThreadId));
 				await this.NavigateTo(new Start());
             }
         }
