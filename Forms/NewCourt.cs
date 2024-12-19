@@ -5,8 +5,8 @@ using PrenburtisBot.Attributes;
 
 namespace PrenburtisBot.Forms
 {
-	[BotCommand("Распределить игроков по командам")]
-	internal class Teams : BotCommandFormBase
+	[BotCommand("Создать новую площадку")]
+	internal class NewCourt : BotCommandFormBase
 	{
 		private bool _isShowingKeyboard = false;
 
@@ -89,11 +89,11 @@ namespace PrenburtisBot.Forms
 
 			ButtonForm buttonForm = new();
 			string value = courtId.ToString();
-			buttonForm.AddButtonRow(new ButtonBase("✏️", new CallbackData(nameof(Edit), value).Serialize()),
-				new ButtonBase("🔀", new CallbackData(nameof(Shuffle), value).Serialize()),
-				new ButtonBase("👀", new CallbackData(nameof(Players), value).Serialize()));
+			buttonForm.AddButtonRow(new ButtonBase("✏️", new CallbackData(nameof(EditCourt), value).Serialize()),
+				new ButtonBase("🔀", new CallbackData(nameof(ShuffleCourt), value).Serialize()),
+				new ButtonBase("👀", new CallbackData(nameof(CourtPlayers), value).Serialize()));
 
-			string text = await Start.GetDeepLinkAsync(this.Client.TelegramClient, typeof(Join), courtId.ToString());
+			string text = await Start.GetDeepLinkAsync(this.Client.TelegramClient, typeof(JoinCourt), courtId.ToString());
 			return new(text) { Buttons = buttonForm };
 		}
 	}

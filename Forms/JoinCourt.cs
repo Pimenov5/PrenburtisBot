@@ -6,8 +6,8 @@ using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Forms
 {
-	[BotCommand("Узнать номер своей команды")]
-	internal class Join : BotCommandFormBase
+	[BotCommand("Присоединяться к команде на площадке")]
+	internal class JoinCourt : BotCommandFormBase
 	{
 		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
@@ -74,8 +74,8 @@ namespace PrenburtisBot.Forms
 			}
 
 			ButtonForm? buttonForm = teams.Any((string? value) => value is not null) ? new() : null;
-			buttonForm?.AddButtonRow(new ButtonBase("👀", new CallbackData(nameof(Players), courtId).Serialize()),
-				new ButtonBase("❌", new CallbackData(nameof(Leave), courtId).Serialize()));
+			buttonForm?.AddButtonRow(new ButtonBase("👀", new CallbackData(nameof(CourtPlayers), courtId).Serialize()),
+				new ButtonBase("❌", new CallbackData(nameof(LeaveCourt), courtId).Serialize()));
 
 			return new(text) { Buttons = buttonForm };
 		}

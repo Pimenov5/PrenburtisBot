@@ -6,7 +6,7 @@ using TelegramBotBase.Form;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Список игроков на площадке")]
-	internal class Players : BotCommandFormBase
+	internal class CourtPlayers : BotCommandFormBase
 	{
 		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
@@ -47,7 +47,7 @@ namespace PrenburtisBot.Forms
 			if (i != default && !string.IsNullOrEmpty(courtId) && Environment.GetEnvironmentVariable("MESSAGE_ID_ALIAS") is string messageIdAlias)
 			{
 				buttonForm = new();
-				buttonForm.AddButtonRow(new ButtonBase("🔄", new CallbackData(nameof(Players), Commands.ParamsToString(courtId, messageIdAlias)).Serialize()));
+				buttonForm.AddButtonRow(new ButtonBase("🔄", new CallbackData(nameof(CourtPlayers), Commands.ParamsToString(courtId, messageIdAlias)).Serialize()));
 			}
 
 			if (messageId != default)
