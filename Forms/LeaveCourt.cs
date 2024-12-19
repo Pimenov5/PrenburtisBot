@@ -7,7 +7,7 @@ using TelegramBotBase.Form;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Выйти из всех команд на площадке")]
-	internal class Leave : BotCommandFormBase
+	internal class LeaveCourt : BotCommandFormBase
 	{
 		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
