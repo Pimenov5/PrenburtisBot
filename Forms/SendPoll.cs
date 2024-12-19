@@ -8,7 +8,7 @@ using TelegramBotBase.Form;
 namespace PrenburtisBot.Forms
 {
     [BotCommand("Создать опрос для переклички", BotCommandScopeType.AllChatAdministrators)]
-    internal class Poll : GroupForm
+    internal class SendPoll : GroupForm
     {
         public const string PLAYER_JOINED = "Иду";
         public const byte PLAYER_JOINED_BYTE = 48;

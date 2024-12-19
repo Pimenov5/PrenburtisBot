@@ -15,9 +15,9 @@ namespace PrenburtisBot.Forms
 		private async Task<string?> RenderAsync(MessageResult message)
 		{
 			if (message.Message.ReplyToMessage is not Telegram.Bot.Types.Message repliedMessage || repliedMessage.Poll is not Telegram.Bot.Types.Poll poll || poll.IsAnonymous
-				|| poll.AllowsMultipleAnswers || poll.Options.Length < 1 || poll.Options[0].Text != Poll.PLAYER_JOINED)
+				|| poll.AllowsMultipleAnswers || poll.Options.Length < 1 || poll.Options[0].Text != SendPoll.PLAYER_JOINED)
 			{
-				return $"Команда должна вызываться в ответ на не анонимный опрос с первым вариантом ответа \"{Poll.PLAYER_JOINED}\"";
+				return $"Команда должна вызываться в ответ на не анонимный опрос с первым вариантом ответа \"{SendPoll.PLAYER_JOINED}\"";
 			}
 
 			string? courtId = message.BotCommandParameters.Count >= 1 ? message.BotCommandParameters[0] : null;
@@ -47,7 +47,7 @@ namespace PrenburtisBot.Forms
 				if (!chats.chats.TryGetValue(chatId, out ChatBase? chatBase) || chatBase is not Channel channel)
 					return $"Не удалось найти {repliedMessage.Chat.Type} с ID {chatId}";
 
-				votes = await TelegramClient.Messages_GetPollVotes(new InputChannel(channel.id, channel.access_hash), repliedMessage.MessageId, option: [Poll.PLAYER_JOINED_BYTE]);
+				votes = await TelegramClient.Messages_GetPollVotes(new InputChannel(channel.id, channel.access_hash), repliedMessage.MessageId, option: [SendPoll.PLAYER_JOINED_BYTE]);
 			}
 			catch (Exception e)
 			{
