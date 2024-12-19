@@ -93,7 +93,7 @@ namespace PrenburtisBot.Forms
 				new ButtonBase("🔀", new CallbackData(nameof(Shuffle), value).Serialize()),
 				new ButtonBase("👀", new CallbackData(nameof(Players), value).Serialize()));
 
-			string text = await Start.GetDeepLinkAsync(this.Client.TelegramClient, typeof(Join), courtId.ToString());
+			string text = await Start.GetDeepLinkAsync(this.Client.TelegramClient, typeof(JoinCourt), courtId.ToString());
 			return new(text) { Buttons = buttonForm };
 		}
 	}

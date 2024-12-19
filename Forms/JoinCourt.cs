@@ -6,8 +6,8 @@ using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Forms
 {
-	[BotCommand("Узнать номер своей команды")]
-	internal class Join : BotCommandFormBase
+	[BotCommand("Присоединяться к команде на площадке")]
+	internal class JoinCourt : BotCommandFormBase
 	{
 		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
