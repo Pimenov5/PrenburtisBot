@@ -74,7 +74,7 @@ namespace PrenburtisBot.Forms
 			}
 
 			ButtonForm? buttonForm = teams.Any((string? value) => value is not null) ? new() : null;
-			buttonForm?.AddButtonRow(new ButtonBase("👀", new CallbackData(nameof(Players), courtId).Serialize()),
+			buttonForm?.AddButtonRow(new ButtonBase("👀", new CallbackData(nameof(CourtPlayers), courtId).Serialize()),
 				new ButtonBase("❌", new CallbackData(nameof(LeaveCourt), courtId).Serialize()));
 
 			return new(text) { Buttons = buttonForm };

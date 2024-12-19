@@ -79,7 +79,7 @@ namespace PrenburtisBot.Forms
 			if (count != 0)
 				await this.Device.Send($"Не удалось добавить {count} из {teams.Length} игроков");
 
-			await this.NavigateTo(new Players(), courtId);
+			await this.NavigateTo(new CourtPlayers(), courtId);
 
 			return null;
 		}

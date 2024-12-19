@@ -14,7 +14,7 @@ namespace PrenburtisBot.Forms
 				return new("Только создатель площадки может перемешивать игроков в командах");
 
 			court.Shuffle();
-			await this.NavigateTo(new Players(), courtId);
+			await this.NavigateTo(new CourtPlayers(), courtId);
 			return null;
 		}
 	}
