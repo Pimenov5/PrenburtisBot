@@ -5,6 +5,7 @@
 		public readonly long UserId = userId;
 		public readonly int Rank = rank;
 		public readonly string FirstName = firstName;
+		public string? Username;
 		public readonly double Rating = rating;
 
 		public string Link => $"[{this.FirstName}](tg://user?id={this.UserId})";
