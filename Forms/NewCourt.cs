@@ -5,8 +5,8 @@ using PrenburtisBot.Attributes;
 
 namespace PrenburtisBot.Forms
 {
-	[BotCommand("Распределить игроков по командам")]
-	internal class Teams : BotCommandFormBase
+	[BotCommand("Создать новую площадку")]
+	internal class NewCourt : BotCommandFormBase
 	{
 		private bool _isShowingKeyboard = false;
 
