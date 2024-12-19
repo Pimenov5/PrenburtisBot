@@ -10,7 +10,7 @@ using Telegram.Bot;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Добавить к площадке игроков из опроса", BotCommandScopeType.AllChatAdministrators)]
-	internal class Add : GroupForm
+	internal class AddPlayers : GroupForm
 	{
 		private async Task<string?> RenderAsync(MessageResult message)
 		{
