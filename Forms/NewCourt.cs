@@ -89,7 +89,7 @@ namespace PrenburtisBot.Forms
 
 			ButtonForm buttonForm = new();
 			string value = courtId.ToString();
-			buttonForm.AddButtonRow(new ButtonBase("✏️", new CallbackData(nameof(Edit), value).Serialize()),
+			buttonForm.AddButtonRow(new ButtonBase("✏️", new CallbackData(nameof(EditCourt), value).Serialize()),
 				new ButtonBase("🔀", new CallbackData(nameof(Shuffle), value).Serialize()),
 				new ButtonBase("👀", new CallbackData(nameof(Players), value).Serialize()));
 

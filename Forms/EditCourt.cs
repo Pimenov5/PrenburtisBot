@@ -5,7 +5,7 @@ using System.Text;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Редактировать площадку")]
-	internal class Edit : NewCourt
+	internal class EditCourt : NewCourt
 	{
 		private string? _courtId = null;
 		private Court? _court = null;
