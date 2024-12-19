@@ -90,7 +90,7 @@ namespace PrenburtisBot.Forms
 			ButtonForm buttonForm = new();
 			string value = courtId.ToString();
 			buttonForm.AddButtonRow(new ButtonBase("✏️", new CallbackData(nameof(EditCourt), value).Serialize()),
-				new ButtonBase("🔀", new CallbackData(nameof(Shuffle), value).Serialize()),
+				new ButtonBase("🔀", new CallbackData(nameof(ShuffleCourt), value).Serialize()),
 				new ButtonBase("👀", new CallbackData(nameof(Players), value).Serialize()));
 
 			string text = await Start.GetDeepLinkAsync(this.Client.TelegramClient, typeof(JoinCourt), courtId.ToString());

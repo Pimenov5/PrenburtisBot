@@ -3,8 +3,8 @@ using PrenburtisBot.Types;
 
 namespace PrenburtisBot.Forms
 {
-	[BotCommand("Перемешать игроков в командах")]
-	internal class Shuffle : BotCommandFormBase
+	[BotCommand("Перемешать игроков в командах на площадке")]
+	internal class ShuffleCourt : BotCommandFormBase
 	{
 		protected override async Task<TextMessage?> RenderAsync(long userId, string[] args)
 		{
