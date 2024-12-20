@@ -7,8 +7,13 @@ using TelegramBotBase.Form;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Запустить бота или отменить выполнение текущей команды")]
-	internal class Start : FormBase
+	internal class Start : BotCommandFormBase
 	{
+		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
+		{
+			return this.Device.IsGroup || this.Device.IsChannel || args.Contains(SET_QUIET) ? null : new("Введите команду или выберите из меню");  
+		}
+
 		public override async Task PreLoad(MessageResult message)
 		{
 			if (message.BotCommandParameters.Count == 1 && message.BotCommandParameters[0].Split(Commands.PARAMS_DELIMITER) is string[] link
@@ -18,13 +23,7 @@ namespace PrenburtisBot.Forms
 			}
 		}
 
-		public override async Task Render(MessageResult message) {
-			if (this.Device.IsGroup)
-				return;
-
-			await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, "Введите команду или выберите из меню",
-				message.Message.MessageThreadId));
-		}
+		public const string SET_QUIET = "sqe";
 
 		public static async Task<string> GetDeepLinkAsync(ITelegramBotClient botClient, Type type, params string[] args) => $"t.me/{(await botClient.GetMeAsync()).Username}"
 			+ $"?{nameof(Start).ToLower()}={type.Name.ToLower()}" + (args.Length == 0 ? string.Empty : Commands.PARAMS_DELIMITER + Commands.ParamsToString(args));
