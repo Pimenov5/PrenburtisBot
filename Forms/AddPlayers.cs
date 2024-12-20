@@ -69,7 +69,11 @@ namespace PrenburtisBot.Forms
 
 			List<Player> players = new(votes.count);
 			foreach (MessagePeerVoteBase vote in votes.votes)
-				players.Add(Users.GetPlayer(vote.Peer.ID, votes.users[vote.Peer.ID].first_name));
+			{
+				Player player = Users.GetPlayer(vote.Peer.ID, votes.users[vote.Peer.ID].first_name);
+				player.Username = votes.users[vote.Peer.ID].username;
+				players.Add(player);
+			}
 
 			uint?[] teams = court.AddPlayers(players);
 			count = 0;

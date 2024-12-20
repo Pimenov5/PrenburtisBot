@@ -30,8 +30,10 @@ namespace PrenburtisBot.Forms
 			string? courtId = args.Length >= 1 ? args[0] : null;
 			Court court = Courts.GetById(ref courtId, userId);
 
-			string firstName = (await this.Device.GetChatUser(userId)).User.FirstName;
-			Player player = Users.GetPlayer(userId, firstName);
+			Telegram.Bot.Types.User user = (await this.Device.GetChatUser(userId)).User;
+			Player player = Users.GetPlayer(userId, user.FirstName);
+			player.Username = user.Username;
+
 			if (court is RankedCourt && player.Rank == default && court.ContainsPlayer(player.UserId))
 			{
 				if (isConfirmed is null)
@@ -64,8 +66,8 @@ namespace PrenburtisBot.Forms
 			if (court is RankedCourt) {
 				if (player.Rank == default)
 					text += Environment.NewLine + "На площадке учитываются ранги игроков, обратитесь к администратору, чтобы добавить свой";
-				if (player.FirstName != firstName)
-					text += Environment.NewLine + $"Пожалуйста, обратитесь к администратору для обновления вашего имени на {firstName}";
+				if (player.FirstName != user.FirstName)
+					text += Environment.NewLine + $"Пожалуйста, обратитесь к администратору для обновления вашего имени на {user.FirstName}";
 			}
 
 			ButtonForm? buttonForm = teams.Any((string? value) => value is not null) ? new() : null;
