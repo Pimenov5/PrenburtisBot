@@ -53,7 +53,7 @@ namespace PrenburtisBot.Forms
 			if (messageId != default)
 				await this.Device.DeleteMessage(messageId);
 
-			return new(stringBuilder.ToString()) { Buttons = buttonForm, ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown };
+			return new TextMessage(stringBuilder.ToString()) { Buttons = buttonForm, ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
 		}
 	}
 }

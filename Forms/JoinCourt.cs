@@ -44,15 +44,10 @@ namespace PrenburtisBot.Forms
 						await this.NavigateTo(this, courtId, teams.Length, args.Button.Value);
 					};
 
-					await this.NavigateTo(confirmDialog);
-					return null;
+					return new TextMessage(string.Empty) { NavigateTo = new(confirmDialog) };
 				}
 				else if (!isConfirmed ?? throw new NullReferenceException())
-				{
-					await this.Device.Send("Вы отменили повторное присоединение к площадке");
-					await this.NavigateTo(new Start());
-					return null;
-				}
+					return new TextMessage("Вы отменили повторное присоединение к площадке").NavigateToStart();
 			}
 
 			for (int i = 0; i < teams.Length; i++) 
@@ -77,7 +72,7 @@ namespace PrenburtisBot.Forms
 			buttonForm?.AddButtonRow(new ButtonBase("👀", new CallbackData(nameof(CourtPlayers), courtId).Serialize()),
 				new ButtonBase("❌", new CallbackData(nameof(LeaveCourt), courtId).Serialize()));
 
-			return new(text) { Buttons = buttonForm };
+			return new TextMessage(text) { Buttons = buttonForm }.NavigateToStart(Start.SET_QUIET);
 		}
 	}
 }

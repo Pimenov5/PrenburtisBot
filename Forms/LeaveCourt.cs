@@ -24,8 +24,7 @@ namespace PrenburtisBot.Forms
 						await confirmDialog.NavigateTo(this, courtId, eventArgs.Button.Value);
 					};
 
-					await this.NavigateTo(confirmDialog);
-					return null;
+					return new TextMessage(string.Empty) { NavigateTo = new(confirmDialog) };
 
 				case true:
 					int[] indexes = court.RemovePlayer(userId);
@@ -39,12 +38,10 @@ namespace PrenburtisBot.Forms
 						1 => $"Вы вышли из команды #{teams[0]}",
 						2 => $"Вы вышли из команды #{teams[0]} и #{teams[1]}",
 						_ => "Вы вышли из команд под номерами: " + new StringBuilder().AppendJoin(", ", teams)
-					});
+					}).NavigateToStart();
 
 				case false:
-					await this.Device.Send("Вы отменили выход из команд на площадке");
-					await this.NavigateTo(new Start());
-					return null;
+					return new TextMessage("Вы отменили выход из команд на площадке").NavigateToStart(Start.SET_QUIET);
 
 			}
 		}

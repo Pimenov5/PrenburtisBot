@@ -57,8 +57,7 @@ namespace PrenburtisBot.Forms
 			newCourt.Edit(_teamCount, _teamMaxPlayerCount);
 			Courts.Replace(int.Parse(_courtId ?? throw new NullReferenceException()), newCourt);
 
-			await this.NavigateTo(new CourtPlayers(), _courtId);
-			return null;
+			return new TextMessage(string.Empty) { NavigateTo = new(new CourtPlayers(), _courtId) };
 		}
 	}
 }
