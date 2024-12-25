@@ -104,7 +104,8 @@ namespace PrenburtisBot.Forms
 
             if (!string.IsNullOrEmpty(text))
             {
-				await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, text, message.Message.MessageThreadId));
+				await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, text,
+					message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null));
 				await this.NavigateTo(new Start());
             }
         }
