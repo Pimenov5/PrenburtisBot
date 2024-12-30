@@ -11,7 +11,7 @@ namespace PrenburtisBot.Forms
 
 		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
-			_courtId ??= args.Length > 0 ? args[0] : null;
+			_courtId ??= args.Length > 0 && int.TryParse(args[0], out int value) ? args[0] : null;
 			Court court = Courts.GetById(ref _courtId, userId);
 			if (court.UserId != userId)
 				return new("Удалять игроков из команд на площадке может только её создатель");
@@ -34,7 +34,7 @@ namespace PrenburtisBot.Forms
 							break;
 						}
 
-					if (names.Count == count)
+					if (names.Count != count)
 						break;
 				}
 
@@ -47,12 +47,13 @@ namespace PrenburtisBot.Forms
 				stringBuilder.AppendLine($"{item.Key} {item.Value.Length switch
 				{
 					0 => "не удалось найти в командах",
-					1 => $"удален(а) из команды #{item.Value[0]}",
-					2 => $"удален(а) из команд #{item.Value[0]} и #{item.Value[1]}",
+					1 => $"удален(а) из команды #{++item.Value[0]}",
+					2 => $"удален(а) из команд #{++item.Value[0]} и #{++item.Value[1]}",
 					_ => "удален(а) из команд под номерами: " + new StringBuilder().AppendJoin(", ", item.Value.ToList().ConvertAll((int index) => 1 + index)).ToString()
 				}}");
 
-			return new TextMessage(stringBuilder.ToString()) { ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
+			TextMessage textMessage = new(stringBuilder.ToString()) { ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown };
+			return names.Values.Any((int[] indexes) => indexes.Length == 0) ? textMessage : textMessage.NavigateToStart(Start.SET_QUIET);
 		}
 	}
 }
