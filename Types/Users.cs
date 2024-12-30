@@ -28,10 +28,21 @@ namespace PrenburtisBot.Types
 			return count;
 		}
 
-		public static Player GetPlayer(long userId, string firstName)
+		public static Player GetPlayer(long userId, string firstName, string? username = null)
 		{
-			Player player = new(userId, default, firstName, default);
-			return _players.TryGetValue(player, out Player? result) ? result : player;
+			Player equalValue = new(userId, default, firstName, default);
+			if (!_players.TryGetValue(equalValue, out Player? result))
+				return equalValue;
+
+			if (!string.IsNullOrEmpty(username))
+				result.Username = username;
+			if (firstName != result.FirstName && !string.IsNullOrEmpty(firstName))
+			{
+				Console.WriteLine($"Имя {result} обновлено на {firstName}");
+				result.FirstName = firstName;
+			}
+
+			return result;
 		}
 	}
 }

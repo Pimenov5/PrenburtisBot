@@ -31,8 +31,7 @@ namespace PrenburtisBot.Forms
 			Court court = Courts.GetById(ref courtId, userId);
 
 			Telegram.Bot.Types.User user = (await this.Device.GetChatUser(userId)).User;
-			Player player = Users.GetPlayer(userId, user.FirstName);
-			player.Username = user.Username;
+			Player player = Users.GetPlayer(userId, user.FirstName, user.Username);
 
 			if (court is RankedCourt && player.Rank == default && court.ContainsPlayer(player.UserId))
 			{
