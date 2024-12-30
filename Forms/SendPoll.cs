@@ -14,11 +14,14 @@ namespace PrenburtisBot.Forms
         public const byte PLAYER_JOINED_BYTE = 48;
         public override async Task Render(MessageResult message)
         {
-            Exception? exception = null;
+            string question = $"Перекличка на волейбол ЗАВТРА ({DateTime.Today.AddDays(1).ToString("dddd", CultureInfo.GetCultureInfo("ru-RU"))})";
+            if (message.BotCommandParameters is List<string> commandParameters && commandParameters.Count > 0 && TimeOnly.TryParse(commandParameters[0], out TimeOnly timeOnly))
+                question += " в " + commandParameters[0];
+
+			Exception? exception = null;
             try
             {
-                Telegram.Bot.Types.Message pollMessage = await Device.Api(async (botClient) => await botClient.SendPollAsync(Device.DeviceId,
-                    $"Перекличка на волейбол ЗАВТРА ({DateTime.Today.AddDays(1).ToString("dddd", CultureInfo.GetCultureInfo("ru-RU"))})",
+                Telegram.Bot.Types.Message pollMessage = await Device.Api(async (botClient) => await botClient.SendPollAsync(Device.DeviceId, question,
                     [PLAYER_JOINED, "Не иду - уступаю своё место", "👀"], message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null,
                     isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false));
 
