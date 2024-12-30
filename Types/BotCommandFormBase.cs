@@ -19,7 +19,7 @@ namespace PrenburtisBot.Types
 
 		public override async Task Render(MessageResult message)
 		{
-			List<string> botCommandParameters = message.BotCommandParameters;
+			List<string> botCommandParameters = message.BotCommandParameters.Count > 0 ? message.BotCommandParameters : message.Command != message.BotCommand ? message.Command.Split(' ').ToList() : [];
 			botCommandParameters.RemoveAll((string value) => string.IsNullOrEmpty(value));
 			string[] args = botCommandParameters.ToArray();
 
@@ -62,7 +62,8 @@ namespace PrenburtisBot.Types
 				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
 					InlineKeyboardMarkup? inlineKeyboardMarkup = this.Device.IsGroup ? null : textMessage.Buttons;
-					await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, textMessage.Text, message.Message.MessageThreadId,
+					await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, textMessage.Text,
+						message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null,
 						textMessage.ParseMode, replyMarkup: inlineKeyboardMarkup));
 				}
 
