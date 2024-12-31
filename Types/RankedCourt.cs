@@ -21,10 +21,13 @@
 
 			List<Team> teams = base.GetTeams(player);
 
-			if (_mustSort && teams.Count > 1)
+			if (teams.Count > 1)
 			{
-				teams.Sort((Team a, Team b) => a.GetRankCount(player.Rank).CompareTo(b.GetRankCount(player.Rank)));
-				teams.RemoveAll((Team team) => team.GetRankCount(player.Rank) != teams.First().GetRankCount(player.Rank));
+				if (_mustSort)
+				{
+					teams.Sort((Team a, Team b) => a.GetRankCount(player.Rank).CompareTo(b.GetRankCount(player.Rank)));
+					teams.RemoveAll((Team team) => team.GetRankCount(player.Rank) != teams.First().GetRankCount(player.Rank));
+				}
 
 				teams.Sort((Team a, Team b) => a.PlayerCount.CompareTo(b.PlayerCount));
 				teams.RemoveAll((Team team) => team.PlayerCount != teams.First().PlayerCount);
