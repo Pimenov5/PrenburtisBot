@@ -19,15 +19,20 @@ namespace PrenburtisBot.Types
 
 		public override async Task Render(MessageResult message)
 		{
-			List<string> botCommandParameters = message.BotCommandParameters.Count > 0 ? message.BotCommandParameters : message.Command != message.BotCommand ? message.Command.Split(' ').ToList() : [];
+			List<string> botCommandParameters = message.BotCommandParameters.Count > 0 ? message.BotCommandParameters : (!string.IsNullOrEmpty(message.BotCommand)
+				&& message.Command.Contains(message.BotCommand) ? message.Command.Replace(message.BotCommand, string.Empty) : message.Command).Split(' ').ToList();
 			botCommandParameters.RemoveAll((string value) => string.IsNullOrEmpty(value));
 			string[] args = botCommandParameters.ToArray();
 
 			if (this.Device.IsGroup) {
-				if (!string.IsNullOrEmpty(message.BotCommand) && args.Length > 0 && args[^1].StartsWith('@') && args[^1] == "@" + (await this.Client.TelegramClient.GetMeAsync()).Username)
+				string botUsername = '@' + (await this.Client.TelegramClient.GetMeAsync()).Username;
+				if (!string.IsNullOrEmpty(message.BotCommand) && args.Length > 0 && args[^1] == botUsername)
 					Array.Resize(ref args, args.Length - 1);
-				else if (_args.Length == 0)
+				else if (!message.Command.EndsWith(botUsername) && !string.IsNullOrEmpty(message.BotCommand))
+				{
+					Console.WriteLine($"Предотвращена попытка вызова {this.GetType().Name} без указания {botUsername} в групповом чате {this.Device.DeviceId}");
 					return;
+				}
 			}
 
 			if (_args.Length == 0)

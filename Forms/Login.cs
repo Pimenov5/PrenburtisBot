@@ -46,7 +46,7 @@ namespace PrenburtisBot.Forms
 
 			if ((await _client.Login(_loginInfo)) is string need)
 			{
-				PromptDialog promptDialog = new($"Введите {need}");
+				PromptDialog promptDialog = new($"Введите {need.Replace("_", "\\_")}");
 				promptDialog.Completed += (sender, args) =>
 				{
 					const string VERIFICATION_CODE_NEED = "verification_code";
