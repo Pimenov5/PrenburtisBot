@@ -19,8 +19,7 @@ namespace PrenburtisBot.Forms
             if (message.BotCommandParameters is List<string> commandParameters && commandParameters.Count > 0 && TimeOnly.TryParse(commandParameters[0], out TimeOnly timeOnly))
                 question += " в " + commandParameters[0];
 
-            const string PINNED_MESSAGE_ID = "pinnedMessageId";
-            if (Session.Get(typeof(SendPoll), PINNED_MESSAGE_ID) is string pinnedMessageId && int.TryParse(pinnedMessageId, out int messageId))
+            if (Session.Get(typeof(SendPoll), this.Device.DeviceId.ToString()) is string pinnedMessageId && int.TryParse(pinnedMessageId, out int messageId))
             {
                 try
                 {
@@ -40,7 +39,7 @@ namespace PrenburtisBot.Forms
                     isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false));
 
                 await Device.Api(async (botClient) => await botClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId));
-                Session.Set(typeof(SendPoll), PINNED_MESSAGE_ID, pollMessage.MessageId.ToString());
+                Session.Set(typeof(SendPoll), this.Device.DeviceId.ToString(), pollMessage.MessageId.ToString());
                 Session.Write();
             }
             catch (Exception e)
