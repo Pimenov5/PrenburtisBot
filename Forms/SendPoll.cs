@@ -4,6 +4,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using TelegramBotBase.Base;
 using TelegramBotBase.Form;
+using PrenburtisBot.Types;
 
 namespace PrenburtisBot.Forms
 {
@@ -18,14 +19,29 @@ namespace PrenburtisBot.Forms
             if (message.BotCommandParameters is List<string> commandParameters && commandParameters.Count > 0 && TimeOnly.TryParse(commandParameters[0], out TimeOnly timeOnly))
                 question += " в " + commandParameters[0];
 
+            const string PINNED_MESSAGE_ID = "pinnedMessageId";
+            if (Session.Get(typeof(SendPoll), PINNED_MESSAGE_ID) is string pinnedMessageId && int.TryParse(pinnedMessageId, out int messageId))
+            {
+                try
+                {
+                    await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.UnpinChatMessageAsync(this.Device.DeviceId, messageId));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
+
 			Exception? exception = null;
-            try
+			try
             {
                 Telegram.Bot.Types.Message pollMessage = await Device.Api(async (botClient) => await botClient.SendPollAsync(Device.DeviceId, question,
                     [PLAYER_JOINED, "Не иду - уступаю своё место", "👀"], message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null,
                     isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false));
 
                 await Device.Api(async (botClient) => await botClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId));
+                Session.Set(typeof(SendPoll), PINNED_MESSAGE_ID, pollMessage.MessageId.ToString());
+                Session.Write();
             }
             catch (Exception e)
             {

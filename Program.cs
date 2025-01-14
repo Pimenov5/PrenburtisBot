@@ -32,6 +32,17 @@ namespace PrenburtisBot
 
 		private static async Task Main(string[] args)
 		{
+			Session.Path = Environment.GetEnvironmentVariable("SESSION_PATH");
+			try
+			{
+				if (Session.Read())
+					Console.WriteLine($"Добавлены данные сессии из файла {Session.Path}");
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+			}
+
 			if (GetFilePath("TEAMS_NAMES") is string path)
 			{
 				using StreamReader streamReader = new(path);
