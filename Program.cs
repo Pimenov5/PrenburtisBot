@@ -109,7 +109,10 @@ namespace PrenburtisBot
 			};
 
 			TextMessage.GetStartForm = () => new Start();
-			Login.LoginEvent += (Type? type, WTelegram.Client client) => { AddPlayers.TelegramClient = client; };
+			Login.LoginEvent += (Type? type, WTelegram.Client client) => {
+				AddPlayers.TelegramClient = client;
+				CreateCourt.TelegramClient = client;
+			};
 			await bot.UploadBotCommands();
 
 			await bot.Start();
