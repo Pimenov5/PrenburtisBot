@@ -10,8 +10,6 @@ namespace PrenburtisBot.Types
 	{
 		private object[] _args = [];
 
-		protected virtual async Task<TextMessage?> RenderAsync(long userId, params string[] args) { return null; }
-
 		public BotCommandFormBase() => this.Init += async (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
 		{
 			_args = initArgs.Args;
@@ -53,14 +51,71 @@ namespace PrenburtisBot.Types
 				_args = [];
 			}
 
-			TextMessage? textMessage;
+			List<Type> types = new(1 + args.Length);
+			List<Object> parameters = new(types.Capacity);
+			for (int i = 0; i < args.Length; i++) {
+				types.Add(args[i].GetType());
+				parameters.Add(args[i]);
+			}
+
+			const string METHOD_NAME = "Render";
+			const string ASYNC_METHOD_NAME = METHOD_NAME + "Async";
+			System.Reflection.MethodInfo? methodInfo = this.GetType().GetMethod(METHOD_NAME, types.ToArray()) ?? this.GetType().GetMethod(ASYNC_METHOD_NAME, types.ToArray());
+			if (methodInfo is null)
+			{
+				methodInfo = this.GetType().GetMethod(METHOD_NAME, [typeof(string[])]) ?? this.GetType().GetMethod(ASYNC_METHOD_NAME, [typeof(string[])]);
+				if (methodInfo is not null)
+				{
+					parameters.Clear();
+					parameters.Add(args);
+				}
+			}
+
+			if (methodInfo is null)
+			{
+				long userId = this.Device.IsGroup && message.Message is Message messageFrom && messageFrom.From is User user ? user.Id : this.Device.DeviceId;
+				types.Insert(0, userId.GetType());
+				parameters.Insert(0, userId);
+				methodInfo = this.GetType().GetMethod(METHOD_NAME, types.ToArray()) ?? this.GetType().GetMethod(ASYNC_METHOD_NAME, types.ToArray());
+
+				if (methodInfo is null)
+				{
+					methodInfo = this.GetType().GetMethod(METHOD_NAME, [typeof(long), typeof(string[])]) ?? this.GetType().GetMethod(ASYNC_METHOD_NAME, [typeof(long), typeof(string[])]);
+					if (methodInfo is not null)
+					{
+						parameters.RemoveRange(1, parameters.Count - 1);
+						parameters.Add(args);
+					}
+				}
+			}
+
+			TextMessage? textMessage = null;
 			try
 			{
-				textMessage = await RenderAsync(this.Device.IsGroup && message.Message is Message messageFrom && messageFrom.From is User user ? user.Id : this.Device.DeviceId, args);
+				if (methodInfo is null)
+					throw new NullReferenceException("Невалидное количество параметров команды");
+
+				if (methodInfo.Invoke(this, parameters.ToArray()) is object result) {
+					result = result switch
+					{
+						Task<string> => await (Task<string>)result,
+						Task<TextMessage> => await (Task<TextMessage>)result,
+						_ => result
+					};
+
+					textMessage = result switch
+					{
+						null => null,
+						string => new((string)result),
+						TextMessage => (TextMessage)result,
+						_ => throw new InvalidOperationException($"Неизвестный тип результата: {result.GetType().Name}")
+					};
+				}
+		
 			}
 			catch (Exception e)
 			{
-				textMessage = new(e.Message);
+				textMessage = new((e.InnerException ?? e).Message);
 			}
 
 			if (textMessage is not null)
