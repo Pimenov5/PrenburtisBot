@@ -53,6 +53,9 @@ namespace PrenburtisBot.Forms
 			}
 			else if (_isRanked is null)
 			{
+				if (_isShowingKeyboard)
+					await this.Device.HideReplyKeyboard();
+
 				ConfirmDialog confirmDialog = new("Распределять игроков с учётом их ранга?", new ButtonBase("Да", bool.TrueString), new ButtonBase("Нет", bool.FalseString)) { AutoCloseOnClick = false };
 				confirmDialog.ButtonClicked += async (sender, eventArgs) =>
 				{
@@ -63,11 +66,7 @@ namespace PrenburtisBot.Forms
 				await this.NavigateTo(confirmDialog);
 			}
 			else
-			{
-				if (_isShowingKeyboard)
-					await this.Device.HideReplyKeyboard();
 				return true;
-			}
 
 			return false;
 		}
