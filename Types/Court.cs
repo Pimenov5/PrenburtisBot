@@ -131,7 +131,7 @@
 			foreach (Team team in this.Teams)
 				if (team.PlayerCount > teamMaxPlayerCount)
 				{
-					int index = (int)(team.PlayerCount - teamMaxPlayerCount) + 1;
+					int index = (int)teamMaxPlayerCount;
 					count = team.PlayerCount - index;
 					players.AddRange(team.Players.ToList().GetRange(index, count));
 					team.RemovePlayers(index, count);
