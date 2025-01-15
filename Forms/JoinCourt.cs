@@ -9,7 +9,7 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Присоединяться к команде на площадке")]
 	internal class JoinCourt : BotCommandFormBase
 	{
-		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
+		public async Task<TextMessage> RenderAsync(long userId, params string[] args)
 		{
 			bool? isConfirmed = null;
 			string?[] teams = new string?[1];

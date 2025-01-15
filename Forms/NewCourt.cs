@@ -71,7 +71,7 @@ namespace PrenburtisBot.Forms
 			return false;
 		}
 
-		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
+		public async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
 			if (!await this.CanCreateCourtAsync(args))
 				return null;

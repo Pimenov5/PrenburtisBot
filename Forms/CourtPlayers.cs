@@ -8,7 +8,7 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Список игроков на площадке")]
 	internal class CourtPlayers : BotCommandFormBase
 	{
-		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
+		public async Task<TextMessage> RenderAsync(long userId, params string[] args)
 		{
 			int messageId = default;
 			string? courtId = args.Length == 1 ? args[0] : args.Length == 2 && int.TryParse(args[1], out messageId) ? args[0] : null;

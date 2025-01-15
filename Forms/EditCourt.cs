@@ -10,7 +10,7 @@ namespace PrenburtisBot.Forms
 		private string? _courtId = null;
 		private Court? _court = null;
 
-		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
+		public new async Task<TextMessage?> RenderAsync(long userId, params string[] args)
 		{
 			_courtId = _court is not null ? _courtId : args.Length > 0 ? args[0] : null;
 			_court ??= Courts.GetById(ref _courtId, userId);
