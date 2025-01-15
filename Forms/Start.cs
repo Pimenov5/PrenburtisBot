@@ -16,7 +16,7 @@ namespace PrenburtisBot.Forms
 
 		public override async Task PreLoad(MessageResult message)
 		{
-			if (message.BotCommandParameters.Count == 1 && message.BotCommandParameters[0].Split(Commands.PARAMS_DELIMITER) is string[] link
+			if (message.IsFirstHandler && message.BotCommandParameters.Count == 1 && message.BotCommandParameters[0].Split(Commands.PARAMS_DELIMITER) is string[] link
 				&& link.Length >= 1 && Commands.Contains(link[0]))
 			{
 				await this.NavigateTo(Commands.GetNewForm(link[0]), link.Length == 0 ? [] : link[1..]);
