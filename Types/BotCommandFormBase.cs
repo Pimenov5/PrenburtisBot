@@ -28,9 +28,10 @@ namespace PrenburtisBot.Types
 				string botUsername = '@' + (await this.Client.TelegramClient.GetMeAsync()).Username;
 				if (!string.IsNullOrEmpty(message.BotCommand) && args.Length > 0 && args[^1] == botUsername)
 					Array.Resize(ref args, args.Length - 1);
-				else if (!message.Command.EndsWith(botUsername) && !string.IsNullOrEmpty(message.BotCommand))
+				else
 				{
-					Console.WriteLine($"Предотвращена попытка вызова {this.GetType().Name} без указания {botUsername} в групповом чате {this.Device.DeviceId}");
+					if (!message.Command.EndsWith(botUsername) && !string.IsNullOrEmpty(message.BotCommand))
+						Console.WriteLine($"Предотвращена попытка вызова {this.GetType().Name} без указания {botUsername} в групповом чате {this.Device.DeviceId}");
 					return;
 				}
 			}
