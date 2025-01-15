@@ -9,9 +9,10 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Запустить бота или отменить выполнение текущей команды")]
 	internal class Start : BotCommandFormBase
 	{
-		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
+		public string? Render() => Render(null);
+		public string? Render(string? mode)
 		{
-			return this.Device.IsGroup || this.Device.IsChannel || args.Contains(SET_QUIET) ? null : new("Введите команду или выберите из меню");  
+			return this.Device.IsGroup || this.Device.IsChannel || mode == SET_QUIET ? null : "Введите команду или выберите из меню";  
 		}
 
 		public override async Task PreLoad(MessageResult message)

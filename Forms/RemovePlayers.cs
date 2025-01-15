@@ -9,7 +9,7 @@ namespace PrenburtisBot.Forms
 	{
 		private string? _courtId;
 
-		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
+		public TextMessage Render(long userId, params string[] args)
 		{
 			_courtId ??= args.Length > 0 && int.TryParse(args[0], out int value) ? args[0] : null;
 			Court court = Courts.GetById(ref _courtId, userId);

@@ -9,12 +9,13 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Выйти из всех команд на площадке")]
 	internal class LeaveCourt : BotCommandFormBase
 	{
-		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
+		public TextMessage Render(long userId) => Render(userId, null, null);
+		public TextMessage Render(long userId, string? courtId) => Render(userId, courtId, null);
+		public TextMessage Render(long userId, string? courtId, string? confirmation)
 		{
-			string? courtId = args.Length >= 1 ? args[0] : null;
 			Court court = Courts.GetById(ref courtId, userId);
 
-			bool? isConfirmed = 1 <= args.Length && args.Length <= 2 && bool.TryParse(args[^1], out bool value) ? value : null;
+			bool? isConfirmed = !string.IsNullOrEmpty(confirmation) && bool.TryParse(confirmation, out bool value) ? value : null;
 			switch (isConfirmed) {
 				case null:
 					ConfirmDialog confirmDialog = new("Вы точно хотите покинуть эту площадку?" + Environment.NewLine + "Вы не сможете присоединится к ней ещё раз",
