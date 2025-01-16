@@ -9,25 +9,24 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Присоединяться к команде на площадке")]
 	internal class JoinCourt : BotCommandFormBase
 	{
-		public async Task<TextMessage> RenderAsync(long userId, params string[] args)
+		public async Task<TextMessage> RenderAsync(long userId) => await RenderAsync(userId, null, null, null);
+		public async Task<TextMessage> RenderAsync(long userId, string? courtId) => await RenderAsync(userId, courtId, null, null);
+		public async Task<TextMessage> RenderAsync(long userId, string? courtId, string? count) => await RenderAsync(userId, courtId, count, null);
+		public async Task<TextMessage> RenderAsync(long userId, string? courtId, string? count, string? confirmation)
 		{
 			bool? isConfirmed = null;
 			string?[] teams = new string?[1];
-			if (args.Length >= 2)
+			if (int.TryParse(count, out int intValue))
 			{
-				if (int.TryParse(args[1], out int intValue))
-				{
-					if (intValue <= 0)
-						return new("Число присоединений к площадке должно быть больше нуля");
-					else
-						Array.Resize(ref teams, intValue);
-				}
-
-				if (bool.TryParse(args[1], out bool boolValue) || (args.Length == 3 && bool.TryParse(args[2], out boolValue)))
-					isConfirmed = boolValue;
+				if (intValue <= 0)
+					return new("Число присоединений к площадке должно быть больше нуля");
+				else
+					Array.Resize(ref teams, intValue);
 			}
 
-			string? courtId = args.Length >= 1 ? args[0] : null;
+			if (bool.TryParse(confirmation, out bool boolValue))
+				isConfirmed = boolValue;
+
 			Court court = Courts.GetById(ref courtId, userId);
 
 			Telegram.Bot.Types.User user = (await this.Device.GetChatUser(userId)).User;
