@@ -8,10 +8,10 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Список игроков на площадке")]
 	internal class CourtPlayers : BotCommandFormBase
 	{
-		protected override async Task<TextMessage?> RenderAsync(long userId, params string[] args)
+		public async Task<TextMessage> RenderAsync(long userId) => await RenderAsync(userId, null, null);
+		public async Task<TextMessage> RenderAsync(long userId, string? courtId) => await RenderAsync(userId, courtId, null);
+		public async Task<TextMessage> RenderAsync(long userId, string? courtId, string? messageIdToDelete)
 		{
-			int messageId = default;
-			string? courtId = args.Length == 1 ? args[0] : args.Length == 2 && int.TryParse(args[1], out messageId) ? args[0] : null;
 			Court court = Courts.GetById(ref courtId, userId);
 
 			Team[] teams = court.Teams;
@@ -50,7 +50,7 @@ namespace PrenburtisBot.Forms
 				buttonForm.AddButtonRow(new ButtonBase("🔄", new CallbackData(nameof(CourtPlayers), Commands.ParamsToString(courtId, messageIdAlias)).Serialize()));
 			}
 
-			if (messageId != default)
+			if (!string.IsNullOrEmpty(messageIdToDelete) && int.TryParse(messageIdToDelete, out int messageId))
 				await this.Device.DeleteMessage(messageId);
 
 			return new TextMessage(stringBuilder.ToString()) { Buttons = buttonForm, ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
