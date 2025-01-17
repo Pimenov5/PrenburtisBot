@@ -30,6 +30,27 @@ namespace PrenburtisBot
 			return null;
 		}
 
+		private static async Task BeforeBotStartExecuteAsync(params string[] args)
+		{
+			if (args.Length == 0)
+				return;
+
+			List<Type> types = typeof(Program).Assembly.GetTypes().Where((Type type) => type.GetInterface(nameof(IBeforeBotStartAsyncExecutable)) is not null).ToList();
+			foreach (string commandName in args)
+			{
+				if (types.Find((Type type) => type.Name.Equals(commandName, StringComparison.OrdinalIgnoreCase)) is Type type
+					&& type.GetConstructor([])?.Invoke([]) is IBeforeBotStartAsyncExecutable command)
+				{
+					Console.WriteLine(Environment.NewLine + $"Выполняется команда \"{commandName}\"...");
+					Console.WriteLine($"Результат команды \"{commandName}\": " + await command.ExecuteAsync());
+					if (command is IDisposable disposableCommand)
+						disposableCommand.Dispose();
+				}
+				else
+					Console.Error.WriteLine($"Не удалось найти или создать команду \"{commandName}\"");
+			}
+		}
+
 		private static async Task Main(string[] args)
 		{
 			Session.Path = Environment.GetEnvironmentVariable("SESSION_PATH");
@@ -125,6 +146,8 @@ namespace PrenburtisBot
 				CreateCourt.TelegramClient = client;
 			};
 			await bot.UploadBotCommands();
+
+			await Program.BeforeBotStartExecuteAsync(args);
 
 			await bot.Start();
 			Console.WriteLine($"Бот @{(await bot.Client.TelegramClient.GetMeAsync()).Username} запущен и работает");
