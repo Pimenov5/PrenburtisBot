@@ -8,12 +8,9 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Список игроков на площадке")]
 	internal class CourtPlayers : BotCommandFormBase
 	{
-		public async Task<TextMessage> RenderAsync(long userId) => await RenderAsync(userId, null, null);
-		public async Task<TextMessage> RenderAsync(long userId, string? courtId) => await RenderAsync(userId, courtId, null);
-		public async Task<TextMessage> RenderAsync(long userId, string? courtId, string? messageIdToDelete)
+		public static string ToString(ref string? courtId, long userId, bool? isGroup) => ToString(Courts.GetById(ref courtId, userId), userId, isGroup);
+		public static string ToString(Court court, long userId, bool? isGroup)
 		{
-			Court court = Courts.GetById(ref courtId, userId);
-
 			Team[] teams = court.Teams;
 			int count = 0, maxCount = 0;
 			bool canSeePlayers = false;
@@ -35,7 +32,7 @@ namespace PrenburtisBot.Forms
 			foreach (Team team in teams)
 			{
 				string value = $"Команда #{++i}{team.FormatName()} ({team.PlayerCount}): ";
-				if (!this.Device.IsGroup && team.Contains(userId))
+				if (isGroup is bool boolValue && !boolValue && team.Contains(userId))
 					value = ("Ваша " + value).ToUpper();
 
 				stringBuilder.Append(value);
@@ -43,8 +40,17 @@ namespace PrenburtisBot.Forms
 				stringBuilder.AppendLine();
 			}
 
+			return stringBuilder.ToString();
+		}
+
+		public async Task<TextMessage> RenderAsync(long userId) => await RenderAsync(userId, null, null);
+		public async Task<TextMessage> RenderAsync(long userId, string? courtId) => await RenderAsync(userId, courtId, null);
+		public async Task<TextMessage> RenderAsync(long userId, string? courtId, string? messageIdToDelete)
+		{
+			string text = CourtPlayers.ToString(ref courtId, userId, this.Device.IsGroup);
+
 			ButtonForm? buttonForm = null;
-			if (i != default && !string.IsNullOrEmpty(courtId) && Environment.GetEnvironmentVariable("MESSAGE_ID_ALIAS") is string messageIdAlias)
+			if (text.Contains('#') && !string.IsNullOrEmpty(courtId) && Environment.GetEnvironmentVariable("MESSAGE_ID_ALIAS") is string messageIdAlias)
 			{
 				buttonForm = new();
 				buttonForm.AddButtonRow(new ButtonBase("🔄", new CallbackData(nameof(CourtPlayers), Commands.ParamsToString(courtId, messageIdAlias)).Serialize()));
@@ -53,7 +59,7 @@ namespace PrenburtisBot.Forms
 			if (!string.IsNullOrEmpty(messageIdToDelete) && int.TryParse(messageIdToDelete, out int messageId))
 				await this.Device.DeleteMessage(messageId);
 
-			return new TextMessage(stringBuilder.ToString()) { Buttons = buttonForm, ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
+			return new TextMessage(text) { Buttons = buttonForm, ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
 		}
 	}
 }
