@@ -35,7 +35,7 @@ namespace PrenburtisBot.Forms
 			try
             {
                 Telegram.Bot.Types.Message pollMessage = await Device.Api(async (botClient) => await botClient.SendPollAsync(Device.DeviceId, question,
-                    [PLAYER_JOINED, "Не иду - уступаю своё место", "👀"], message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null,
+                    [PLAYER_JOINED, "👀"], message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null,
                     isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false));
 
                 await Device.Api(async (botClient) => await botClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId));
