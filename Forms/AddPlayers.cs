@@ -10,20 +10,20 @@ using Telegram.Bot;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Добавить к площадке игроков из опроса", BotCommandScopeType.AllChatAdministrators)]
-	internal class AddPlayers : GroupForm
+	internal class AddPlayers : BotCommandGroupFormBase
 	{
 		private string? _courtId;
 
-		private async Task<string?> RenderAsync(MessageResult message)
+		public async Task<TextMessage> RenderAsync(MessageResult message)
 		{
 			if (message.Message.ReplyToMessage is not Telegram.Bot.Types.Message repliedMessage || repliedMessage.Poll is not Telegram.Bot.Types.Poll poll || poll.IsAnonymous
 				|| poll.AllowsMultipleAnswers || poll.Options.Length < 1 || poll.Options[0].Text != SendPoll.PLAYER_JOINED)
 			{
-				return $"Команда должна вызываться в ответ на не анонимный опрос с первым вариантом ответа \"{SendPoll.PLAYER_JOINED}\"";
+				return new($"Команда должна вызываться в ответ на не анонимный опрос с первым вариантом ответа \"{SendPoll.PLAYER_JOINED}\"");
 			}
 
 			if (TelegramClient is null)
-				return "Невозможно получить список проголосовавших в опросе, т.к. вы ещё не авторизовались";
+				return new("Невозможно получить список проголосовавших в опросе, т.к. вы ещё не авторизовались");
 
 			IReadOnlyCollection<Player> players;
 			try
@@ -32,11 +32,12 @@ namespace PrenburtisBot.Forms
 			}
 			catch (Exception e)
 			{
-				return e.Message;
+				return new(e.Message);
 			}
 
+			long userId = message.Message.From?.Id ?? throw new NullReferenceException();
 			_courtId = message.BotCommandParameters.Count >= 1 ? message.BotCommandParameters[0] : null;
-			Court court = this.GetCourt(players.Count, message.Message.From?.Id ?? throw new NullReferenceException(), out int courtId);
+			Court court = this.GetCourt(players.Count, userId, out int courtId);
 
 			uint?[] teams = court.AddPlayers(players);
 			int count = 0;
@@ -46,9 +47,8 @@ namespace PrenburtisBot.Forms
 			if (count != 0)
 				await this.Device.Send($"Не удалось добавить {count} из {teams.Length} игроков");
 
-			await this.NavigateTo(new CourtPlayers(), courtId);
-
-			return null;
+			string text = CourtPlayers.ToString(court, userId, this.Device.IsGroup);
+			return new TextMessage(text) { ParseMode = ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
 		}
 
 		protected virtual Court GetCourt(int playersCount, long userId, out int courtId)
@@ -81,25 +81,5 @@ namespace PrenburtisBot.Forms
 		}
 
 		public static WTelegram.Client? TelegramClient = null;
-
-		public override async Task Render(MessageResult message)
-		{
-			string? text;
-			try
-			{
-				text = await this.RenderAsync(message);
-			}
-			catch (Exception e)
-			{
-				text = e.Message;
-			}
-
-            if (!string.IsNullOrEmpty(text))
-            {
-				await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, text,
-					message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null));
-				await this.NavigateTo(new Start());
-            }
-        }
 	}
 }
