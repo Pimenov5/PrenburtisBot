@@ -1,18 +1,19 @@
 ﻿using PrenburtisBot.Attributes;
-using Telegram.Bot.Types;
+using PrenburtisBot.Types;
 using TelegramBotBase.Base;
 using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Forms
 {
 	[BotCommandChat("Авторизация пользователя", null)]
-	internal class Login : FormBase
+	internal class Login : FormBase, IDisposable, IBeforeBotStartAsyncExecutable
 	{
 		private static WTelegram.Client? _staticClient = null;
 		private WTelegram.Client? _client = null;
 		private string? _loginInfo = null;
+		private bool _mustDisposeClient = true;
 
-		private async Task<string?> RenderAsync(MessageResult message)
+		private async Task<string?> RenderAsync()
 		{
 			if (_staticClient is not null)
 				return "Вы уже были авторизованы";
@@ -46,18 +47,24 @@ namespace PrenburtisBot.Forms
 
 			if ((await _client.Login(_loginInfo)) is string need)
 			{
-				PromptDialog promptDialog = new($"Введите {need.Replace("_", "\\_")}");
+				string message = $"Введите {need}";
+				PromptDialog promptDialog = new(message.Replace("_", "\\_"));
 				promptDialog.Completed += (sender, args) =>
 				{
 					const string VERIFICATION_CODE_NEED = "verification_code";
 					_loginInfo = need == VERIFICATION_CODE_NEED ? promptDialog.Value.Replace(" ", "") : promptDialog.Value;
 				};
-				await this.OpenModal(promptDialog);
+
+				if (this.Device is not null)
+					await this.OpenModal(promptDialog);
+				else
+					return message;
 
 				return null;
 			}
 
 			_staticClient = _client;
+			_mustDisposeClient = LoginEvent?.GetInvocationList().Length == 0;
 			LoginEvent?.Invoke(this.GetType(), _staticClient);
 			return $"Вы успешно авторизовались как {_staticClient.User.first_name}";
 		}
@@ -70,7 +77,7 @@ namespace PrenburtisBot.Forms
 			string? text;
 			try
 			{
-				text = await this.RenderAsync(message);
+				text = await this.RenderAsync();
 			}
 			catch (Exception e)
 			{
@@ -79,6 +86,15 @@ namespace PrenburtisBot.Forms
 
 			if (!string.IsNullOrEmpty(text))
 				await this.Device.Send(text);
+		}
+
+		async Task<string?> IBeforeBotStartAsyncExecutable.ExecuteAsync() => await this.RenderAsync();
+
+		public new void Dispose()
+		{
+			base.Dispose();
+			if (_mustDisposeClient)
+				_client?.Dispose();
 		}
 	}
 }
