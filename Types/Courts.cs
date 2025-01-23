@@ -55,5 +55,7 @@
 			else
 				throw new InvalidCastException($"\"{id}\" не является идентификатором площадки");
 		}
+
+		public static int IndexOf(Court court) => _courts.IndexOf(court);
 	}
 }
