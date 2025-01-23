@@ -27,7 +27,10 @@ namespace PrenburtisBot.Forms
 			else if (count == 0)
 				teams = [];
 
-			StringBuilder stringBuilder = new(count == 0 ? "Нет игроков на площадке" : $"Игроков на площадке: {count} из {maxCount}" + Environment.NewLine);
+			StringBuilder stringBuilder = new(count == 0 ? "Нет игроков на площадке"
+				: $"{count} из {maxCount} игроков на площадке{((isGroup ?? false) && Courts.IndexOf(court) is int index && index >= 0 ? $" с ID {index}" : string.Empty)}"
+				+ Environment.NewLine);
+
 			int i = default;
 			foreach (Team team in teams)
 			{
