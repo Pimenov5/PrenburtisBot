@@ -45,7 +45,7 @@ namespace PrenburtisBot.Types
 			if (!string.IsNullOrEmpty(textMessage.Text))
 			{
 				await this.Client.TelegramClient.SendTextMessageAsync(this.Device.DeviceId, textMessage.Text, message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null,
-				textMessage.ParseMode);
+					textMessage.ParseMode, replyToMessageId: textMessage.ReplyToMessageId);
 			}
 
 			if (textMessage.NavigateTo.Form is not null)

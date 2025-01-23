@@ -48,7 +48,7 @@ namespace PrenburtisBot.Forms
 				await this.Device.Send($"Не удалось добавить {count} из {teams.Length} игроков");
 
 			string text = CourtPlayers.ToString(court, userId, this.Device.IsGroup);
-			return new TextMessage(text) { ParseMode = ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
+			return new TextMessage(text) { ParseMode = ParseMode.Markdown, ReplyToMessageId = repliedMessage.MessageId }.NavigateToStart(Start.SET_QUIET);
 		}
 
 		protected virtual Court GetCourt(int playersCount, long userId, out int courtId)

@@ -17,6 +17,7 @@ namespace PrenburtisBot.Types
 		public ButtonForm? Buttons;
 		public ParseMode? ParseMode = null;
 		public FormWithArgs NavigateTo;
+		public int? ReplyToMessageId;
 
 		public TextMessage NavigateToStart(params object[] args)
 		{
