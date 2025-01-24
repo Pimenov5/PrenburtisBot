@@ -4,7 +4,7 @@ using TL;
 
 namespace PrenburtisBot.Forms
 {
-	[BotCommand("Создать площадку с проголосовавшими в опросе", Telegram.Bot.Types.Enums.BotCommandScopeType.AllChatAdministrators)]
+	[BotCommand("Создать площадку с игроками из опроса", Telegram.Bot.Types.Enums.BotCommandScopeType.AllChatAdministrators)]
 	internal class CreateCourt : AddPlayers
 	{
 		private struct Info(byte maxPlayerCount)
