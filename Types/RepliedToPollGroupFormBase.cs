@@ -25,7 +25,7 @@ namespace PrenburtisBot.Types
 
 			long userId = message.Message.From?.Id ?? throw new NullReferenceException();
 			string[] args = message.BotCommandParameters.ToArray();
-			if (args[^1].StartsWith('@') && (await this.Client.TelegramClient.GetMeAsync()).Username is string botUsername && args[^1].Equals('@' + botUsername))
+			if (args.Length > 0 && args[^1].StartsWith('@') && (await this.Client.TelegramClient.GetMeAsync()).Username is string botUsername && args[^1].Equals('@' + botUsername))
 				Array.Resize(ref args, args.Length - 1);
 
 			TextMessage textMessage = this.GetTextMessage(userId, players, args);
