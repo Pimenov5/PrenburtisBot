@@ -70,7 +70,7 @@ namespace PrenburtisBot
 				Console.WriteLine($"Добавлены имена команд ({Team.ReadNames(streamReader)}) из файла {path}");
 			}
 
-			if (GetFilePath("PRENBURTIS_DATA_BASE") is string dataSource) {
+			if (GetFilePath("PRENBURTIS_DATA_BASE") is string dataSource && Environment.GetEnvironmentVariable("USERS_COMMAND_TEXT") is string commandText) {
 				SqliteConnectionStringBuilder connectionStringBuilder = new() { Mode = SqliteOpenMode.ReadOnly, DataSource = dataSource };
 				using SqliteConnection connection = new(connectionStringBuilder.ConnectionString);
 				try
@@ -78,7 +78,7 @@ namespace PrenburtisBot
 					connection.Open();
 					Console.WriteLine($"Установлено соединение с {connection.DataSource}");
 
-					SqliteCommand command = new("SELECT telegram_id, first_name, rank, rating FROM users", connection);
+					SqliteCommand command = new(commandText, connection);
 					SqliteDataReader reader = command.ExecuteReader();
 					Console.WriteLine($"Добавлено ранговых игроков: {Users.Read(reader)}");
 
