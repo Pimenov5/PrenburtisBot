@@ -4,6 +4,13 @@ namespace PrenburtisBot.Types
 {
 	internal static class Users
 	{
+		private struct User(long userId, string firstName, double rating)
+		{
+			public long UserId = userId;
+			public string FirstName = firstName;
+			public double Rating = rating;
+		}
+
 		private class PlayerEqualityComparer : EqualityComparer<Player>
 		{
 			public override bool Equals(Player? x, Player? y) => x == y || x?.UserId == y?.UserId;
