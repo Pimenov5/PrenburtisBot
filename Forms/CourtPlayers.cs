@@ -34,7 +34,12 @@ namespace PrenburtisBot.Forms
 			int i = default;
 			foreach (Team team in teams)
 			{
-				string value = $"Команда #{++i}{team.FormatName()} ({team.PlayerCount}): ";
+				double? rating = null;
+				if (court is RankedCourt)
+					foreach (Player player in team.Players)
+						rating = rating is null ? player.Rating : rating + player.Rating;
+
+				string value = $"Команда #{++i}{team.FormatName()} ({team.PlayerCount}{(rating is null ? string.Empty : $" = {Math.Round((double)rating, 1)}")}): ";
 				if (isGroup is bool boolValue && !boolValue && team.Contains(userId))
 					value = ("Ваша " + value).ToUpper();
 
