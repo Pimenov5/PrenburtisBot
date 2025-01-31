@@ -130,7 +130,7 @@ namespace PrenburtisBot
 							&& Commands.GetChatId(attribute, type) is ChatId chatId && chatId != args.DeviceId:
 
 						case BotCommandScopeType.AllChatAdministrators when args.Device.IsGroup && args.OriginalMessage.From?.Id is long userId
-							&& ! new List<ChatMember>(await args.Device.Api(async (botClient) => await botClient.GetChatAdministratorsAsync(args.DeviceId))).Any((ChatMember member) => member.User.Id == userId):
+							&& ! new List<ChatMember>(await args.Device.Client.TelegramClient.GetChatAdministratorsAsync(args.DeviceId)).Any((ChatMember member) => member.User.Id == userId):
 
 							Console.WriteLine($"Предотвращён вызов формы {type.Name} пользователем {args.OriginalMessage.From?.FirstName} в чате \"{args.Device.GetChatTitle()}\"");
 							return;

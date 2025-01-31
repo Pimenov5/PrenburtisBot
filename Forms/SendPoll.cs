@@ -22,7 +22,7 @@ namespace PrenburtisBot.Forms
             {
                 try
                 {
-                    await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.UnpinChatMessageAsync(this.Device.DeviceId, messageId));
+                    await this.Device.Client.TelegramClient.UnpinChatMessageAsync(this.Device.DeviceId, messageId);
                 }
                 catch (Exception e)
                 {
@@ -30,11 +30,10 @@ namespace PrenburtisBot.Forms
                 }
             }
 
-            Telegram.Bot.Types.Message pollMessage = await Device.Api(async (botClient) => await botClient.SendPollAsync(Device.DeviceId, question,
-                [PLAYER_JOINED, "👀"], message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null,
-                isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false));
+            Telegram.Bot.Types.Message pollMessage = await Device.Client.TelegramClient.SendPollAsync(Device.DeviceId, question, [PLAYER_JOINED, "👀"],
+                message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null, isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false);
 
-            await Device.Api(async (botClient) => await botClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId));
+            await Device.Client.TelegramClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId);
             Session.Set(typeof(SendPoll), this.Device.DeviceId.ToString(), pollMessage.MessageId.ToString());
             Session.Write();
 

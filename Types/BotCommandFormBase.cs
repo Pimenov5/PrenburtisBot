@@ -123,9 +123,8 @@ namespace PrenburtisBot.Types
 				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
 					InlineKeyboardMarkup? inlineKeyboardMarkup = this.Device.IsGroup ? null : textMessage.Buttons;
-					await this.Device.Api(async (ITelegramBotClient botClient) => await botClient.SendTextMessageAsync(this.Device.DeviceId, textMessage.Text,
-						message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null,
-						textMessage.ParseMode, replyMarkup: inlineKeyboardMarkup));
+					await this.Device.Client.TelegramClient.SendTextMessageAsync(this.Device.DeviceId, textMessage.Text,
+						message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null, textMessage.ParseMode, replyMarkup: inlineKeyboardMarkup);
 				}
 
 				if (textMessage.NavigateTo.Form is not null)
