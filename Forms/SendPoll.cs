@@ -37,7 +37,7 @@ namespace PrenburtisBot.Forms
             Session.Set(typeof(SendPoll), this.Device.DeviceId.ToString(), pollMessage.MessageId.ToString());
             Session.Write();
 
-            return new TextMessage(string.Empty).NavigateToStart();
+            return new TextMessage(string.Empty).NavigateToStart(Start.SET_QUIET);
         }
     }
 }
