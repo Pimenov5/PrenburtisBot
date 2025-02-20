@@ -9,11 +9,14 @@ namespace PrenburtisBot.Types
 		public readonly object[] Args = args;
 	}
 
-	internal class TextMessage(string text)
+	internal enum TextMessageKind { Unknown, Error }
+
+	internal class TextMessage(string text, TextMessageKind messageKind = TextMessageKind.Unknown)
 	{
 		public static Func<FormBase>? GetStartForm;
 
-		public readonly string Text = text;
+		public string Text = text;
+		public TextMessageKind Kind = messageKind;
 		public ButtonForm? Buttons;
 		public ParseMode? ParseMode = null;
 		public FormWithArgs NavigateTo;
