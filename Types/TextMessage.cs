@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot.Types.Enums;
 using TelegramBotBase.Form;
+using TelegramBotBase.Markdown;
 
 namespace PrenburtisBot.Types
 {
@@ -26,6 +27,14 @@ namespace PrenburtisBot.Types
 		{
 			FormBase form = GetStartForm?.Invoke() ?? throw new NullReferenceException();
 			this.NavigateTo = new(form, args);
+			return this;
+		}
+
+		public TextMessage SetErrorKind(ParseMode parseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown)
+		{
+			this.Kind = TextMessageKind.Error;
+			this.Text = this.Text.Bold();
+			this.ParseMode = parseMode;
 			return this;
 		}
 	}
