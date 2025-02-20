@@ -11,10 +11,10 @@ namespace PrenburtisBot.Forms
 		{
 			Court court = Courts.GetById(ref courtId, userId);
 			if (court.UserId != userId)
-				return new("Только создатель площадки может перемешивать игроков в командах");
+				throw new ArgumentException("Только создатель площадки может перемешивать игроков в командах", nameof(courtId));
 
 			court.Shuffle();
-			return new(string.Empty) { NavigateTo = new(new CourtPlayers(), courtId) };
+			return new(string.Empty) { NavigateTo = new(new CourtPlayers(), courtId ?? throw new NullReferenceException()) };
 		}
 	}
 }
