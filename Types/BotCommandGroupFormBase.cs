@@ -33,7 +33,7 @@ namespace PrenburtisBot.Types
 			}
 			catch (Exception e)
 			{
-				textMessage = new TextMessage(e.Message).NavigateToStart();
+				textMessage = new TextMessage(e.Message).SetErrorKind().NavigateToStart();
 			}
 
 			if (textMessage is null)
