@@ -78,8 +78,8 @@ namespace PrenburtisBot
 					connection.Open();
 					Console.WriteLine($"Установлено соединение с {connection.DataSource}");
 
-					SqliteCommand command = new(commandText, connection);
-					SqliteDataReader reader = command.ExecuteReader();
+					using SqliteCommand command = new(commandText, connection);
+					using SqliteDataReader reader = command.ExecuteReader();
 					Console.WriteLine($"Добавлено ранговых игроков: {Users.Read(reader)}");
 
 				}
