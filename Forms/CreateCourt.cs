@@ -7,13 +7,6 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Создать площадку с игроками из опроса", Telegram.Bot.Types.Enums.BotCommandScopeType.AllChatAdministrators)]
 	internal class CreateCourt : AddPlayers
 	{
-		private struct Info(byte maxPlayerCount)
-		{
-			public readonly byte MaxPlayerCount = maxPlayerCount;
-			public int TeamCount;
-			public double Remainder;
-		}
-
 		protected override Court GetCourt(int playersCount, long userId, out int courtId)
 		{
 			if (playersCount < 3)
