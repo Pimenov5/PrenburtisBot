@@ -14,21 +14,6 @@ namespace PrenburtisBot
 {
     internal class Program
 	{
-		private static string? GetFilePath(string variable)
-		{
-			if (Environment.GetEnvironmentVariable(variable) is string path)
-			{
-				if (System.IO.File.Exists(path))
-					return path;
-				else
-					Console.WriteLine($"Не существует файл {path}");
-			}
-			else
-				Console.WriteLine($"Отсутствует переменная окружения {variable}");
-
-			return null;
-		}
-
 		private static async Task BeforeBotStartExecuteAsync(params string[] args)
 		{
 			if (args.Length == 0)
