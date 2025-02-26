@@ -3,7 +3,6 @@ using PrenburtisBot.Forms;
 using TelegramBotBase.Args;
 using TelegramBotBase.Form;
 using PrenburtisBot.Types;
-using Microsoft.Data.Sqlite;
 using Telegram.Bot;
 using TelegramBotBase;
 using PrenburtisBot.Attributes;
@@ -35,60 +34,52 @@ namespace PrenburtisBot
 			if (args.Length == 0)
 				return;
 
-			List<Type> types = typeof(Program).Assembly.GetTypes().Where((Type type) => type.GetInterface(nameof(IBeforeBotStartAsyncExecutable)) is not null).ToList();
+			List<Type> types = typeof(Program).Assembly.GetTypes().Where((Type type) => type.GetInterface(nameof(IBeforeBotStartAsyncExecutable)) is not null
+				|| type.GetCustomAttribute<BeforeBotStartExecutableAttribute>() is not null).ToList();
+
 			foreach (string commandName in args)
 			{
-				if (types.Find((Type type) => type.Name.Equals(commandName, StringComparison.OrdinalIgnoreCase)) is Type type
-					&& type.GetConstructor([])?.Invoke([]) is IBeforeBotStartAsyncExecutable command)
+				if (types.Find((Type type) => type.Name.Equals(commandName, StringComparison.OrdinalIgnoreCase)) is not Type type)
 				{
-					Console.WriteLine(Environment.NewLine + $"Выполняется команда \"{commandName}\"...");
-					Console.WriteLine($"Результат команды \"{commandName}\": " + await command.ExecuteAsync());
-					if (command is IDisposable disposableCommand)
-						disposableCommand.Dispose();
+					Console.Error.WriteLine($"Не удалось найти \"{commandName}\"");
+					continue;
 				}
-				else
-					Console.Error.WriteLine($"Не удалось найти или создать команду \"{commandName}\"");
+
+				try
+				{
+					string result = string.Empty;
+					if (type.GetConstructor([])?.Invoke([]) is IBeforeBotStartAsyncExecutable command)
+					{
+						result = await command.ExecuteAsync() ?? string.Empty;
+						if (command is IDisposable disposableCommand)
+							disposableCommand.Dispose();
+					}
+					else if (type.GetCustomAttribute<BeforeBotStartExecutableAttribute>() is BeforeBotStartExecutableAttribute attribute)
+					{
+						if (type.GetMethod(attribute.MethodName) is not MethodInfo methodInfo)
+						{
+							Console.Error.WriteLine($"У класса \"{commandName}\" отсутствует метод \"{attribute.MethodName}\"");
+							continue;
+						}
+
+						if (methodInfo.Invoke(type, []) is string str)
+							result = str;
+					}
+					else
+						Console.Error.WriteLine($"Не удалось вызвать \"{commandName}\"");
+
+					if (!string.IsNullOrEmpty(result))
+						Console.WriteLine($"Результат \"{commandName}\": {result}");
+				}
+				catch (Exception e)
+				{
+					Console.Error.WriteLine($"Не удалось выполнить \"{commandName}\" из-за ошибки: {e.Message}");
+				}
 			}
 		}
 
 		private static async Task Main(string[] args)
 		{
-			Session.Path = Environment.GetEnvironmentVariable("SESSION_PATH");
-			try
-			{
-				if (Session.Read())
-					Console.WriteLine($"Добавлены данные сессии из файла {Session.Path}");
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e.Message);
-			}
-
-			if (GetFilePath("TEAMS_NAMES") is string path)
-			{
-				using StreamReader streamReader = new(path);
-				Console.WriteLine($"Добавлены имена команд ({Team.ReadNames(streamReader)}) из файла {path}");
-			}
-
-			if (GetFilePath("PRENBURTIS_DATA_BASE") is string dataSource && Environment.GetEnvironmentVariable("USERS_COMMAND_TEXT") is string commandText) {
-				SqliteConnectionStringBuilder connectionStringBuilder = new() { Mode = SqliteOpenMode.ReadOnly, DataSource = dataSource };
-				using SqliteConnection connection = new(connectionStringBuilder.ConnectionString);
-				try
-				{
-					connection.Open();
-					Console.WriteLine($"Установлено соединение с {connection.DataSource}");
-
-					using SqliteCommand command = new(commandText, connection);
-					using SqliteDataReader reader = command.ExecuteReader();
-					Console.WriteLine($"Добавлено ранговых игроков: {Users.Read(reader)}");
-
-				}
-				catch (Exception e)
-				{
-					Console.WriteLine(e);
-				}
-			}
-
 			const string API_KEY = "API_KEY";
 			string? apiKey = Environment.GetEnvironmentVariable(API_KEY);
 			if (string.IsNullOrEmpty(apiKey))
