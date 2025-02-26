@@ -58,4 +58,4 @@ COPY --from=build /app .
 USER $APP_UID
 
 ENTRYPOINT ["dotnet", "PrenburtisBot.dll"]
-CMD ["login"]
+CMD ["ReadTeamsNames", "ReadUsers", "Login"]
