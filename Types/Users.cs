@@ -25,8 +25,8 @@ namespace PrenburtisBot.Types
 			while (reader.HasRows && reader.Read())
 			{
 				const int FIELD_COUNT = 3;
-				if (reader.FieldCount != FIELD_COUNT)
-					throw new ArgumentOutOfRangeException(nameof(reader), $"Количество полей в запросе должно быть равно {FIELD_COUNT}");
+				if (reader.FieldCount < FIELD_COUNT)
+					throw new ArgumentOutOfRangeException(nameof(reader), $"Количество полей в запросе должно быть не меньше {FIELD_COUNT}");
 
 				users.Add(new(reader.GetInt64(0), reader.GetString(1), reader.GetDouble(2)));
 			}
