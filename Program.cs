@@ -58,7 +58,7 @@ namespace PrenburtisBot
 				}
 				catch (Exception e)
 				{
-					Console.Error.WriteLine($"Не удалось выполнить \"{commandName}\" из-за ошибки: {e.Message}");
+					Console.Error.WriteLine($"Не удалось выполнить \"{commandName}\" из-за ошибки: {(e.InnerException ?? e).Message}");
 				}
 			}
 		}
