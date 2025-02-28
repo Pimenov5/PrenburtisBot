@@ -95,6 +95,7 @@ namespace PrenburtisBot.Types
 				if (methodInfo is null)
 					throw new NullReferenceException("Невалидное количество параметров команды");
 
+				this.Device.LastMessage = message.Message;
 				if (methodInfo.Invoke(this, parameters.ToArray()) is object result) {
 					result = result switch
 					{
