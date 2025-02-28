@@ -4,11 +4,12 @@ namespace PrenburtisBot.Types
 {
 	internal static class Users
 	{
-		private struct User(long userId, string firstName, double rating)
+		private struct User(long userId, string firstName, double rating, bool isActual)
 		{
 			public long UserId = userId;
 			public string FirstName = firstName;
 			public double Rating = rating;
+			public bool IsActual = isActual;
 		}
 
 		private class PlayerEqualityComparer : EqualityComparer<Player>
@@ -24,11 +25,11 @@ namespace PrenburtisBot.Types
 			List<User> users = [];
 			while (reader.HasRows && reader.Read())
 			{
-				const int FIELD_COUNT = 3;
+				const int FIELD_COUNT = 4;
 				if (reader.FieldCount < FIELD_COUNT)
 					throw new ArgumentOutOfRangeException(nameof(reader), $"Количество полей в запросе должно быть не меньше {FIELD_COUNT}");
 
-				users.Add(new(reader.GetInt64(0), reader.GetString(1), reader.GetDouble(2)));
+				users.Add(new(reader.GetInt64(0), reader.GetString(1), reader.GetDouble(2), reader.GetBoolean(3)));
 			}
 
 			if (users.Count == 0)
@@ -40,16 +41,17 @@ namespace PrenburtisBot.Types
 			foreach (User user in users) 
 			{
 				rank = Math.Truncate(user.Rating) != Math.Truncate(prevRating) ? ++rank : rank;
-				_players.Add(new(user.UserId, rank, user.FirstName, user.Rating));
+				_players.Add(new(user.UserId, rank, user.FirstName, user.Rating, user.IsActual));
 				prevRating = user.Rating;
 			}
 
 			return _players.Count - count;
 		}
 
+		public static IReadOnlyCollection<Player> GetPlayers() => _players;
 		public static Player GetPlayer(long userId, string firstName, string? username = null)
 		{
-			Player equalValue = new(userId, default, firstName, default);
+			Player equalValue = new(userId, default, firstName, default, default);
 			if (!_players.TryGetValue(equalValue, out Player? result))
 				return equalValue;
 

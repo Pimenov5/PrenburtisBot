@@ -2,7 +2,7 @@
 
 ﻿namespace PrenburtisBot.Types
 {
-	internal class Player(long userId, int rank, string firstName, double rating)
+	internal class Player(long userId, int rank, string firstName, double rating, bool isActual)
 	{
 		private string _firstName = firstName;
 
@@ -11,6 +11,7 @@
 		public string FirstName { get { return _firstName; } set { _firstName = string.IsNullOrEmpty(value) ? throw new ArgumentNullException(nameof(FirstName)) : value; } }
 		public string? Username;
 		public readonly double Rating = rating;
+		public readonly bool IsActual = isActual;
 
 		public string Link => $"tg://user?id={this.UserId}".Link(this.FirstName);
 		public override string ToString() => this.Link;
