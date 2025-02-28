@@ -96,6 +96,15 @@ namespace PrenburtisBot.Forms
 			stringBuilder.Remove(stringBuilder.Length - VALUES_DELIMITER.Length, VALUES_DELIMITER.Length);
 			stringBuilder.Append(" RETURNING *");
 
+			string path = Path.Combine(
+					Path.GetDirectoryName((s_connection ?? throw new NullReferenceException()).DataSource) ?? throw new NullReferenceException(),
+					Path.GetRandomFileName()
+				);
+			using (FileStream fs = System.IO.File.Create(path, 1))
+			{
+				Console.Write(path);
+			}
+
 			int count = default;
 			using SqliteTransaction transaction = (s_connection ?? throw new NullReferenceException()).BeginTransaction();
 			try

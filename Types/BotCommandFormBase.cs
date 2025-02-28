@@ -116,7 +116,7 @@ namespace PrenburtisBot.Types
 			}
 			catch (Exception e)
 			{
-				textMessage = new TextMessage((e.InnerException ?? e).Message).SetErrorKind();
+				textMessage = new TextMessage((e.InnerException ?? e).ToString()).SetErrorKind();
 			}
 
 			if (textMessage is not null)
