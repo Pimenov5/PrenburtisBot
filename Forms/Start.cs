@@ -1,17 +1,36 @@
 ﻿using PrenburtisBot.Attributes;
 using PrenburtisBot.Types;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotBase.Base;
 using TelegramBotBase.Form;
+using TelegramBotBase.Markdown;
 
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Запустить бота или отменить выполнение текущей команды")]
 	internal class Start : BotCommandFormBase
 	{
-		public string? Render() => Render(null);
-		public string? Render(string? mode)
+		public async Task<string?> RenderAsync() => await RenderAsync(null);
+		public async Task<string?> RenderAsync(string? mode)
 		{
+			if (this.Device.LastMessage is Message message && message.From is User user && message.Document is Document document && document.FileName is string documentFileName
+				&& Environment.GetEnvironmentVariable("TEAMS_NAMES") is string fileName && documentFileName.Equals(Path.GetFileName(fileName)))
+			{
+				if (!long.TryParse(Environment.GetEnvironmentVariable("BOT_OWNER_CHAT_ID"), out long botOwnerChatId))
+					throw new Exception("Отсутствует идентификатор владельца бота");
+
+				IReplyMarkup replyMarkup = new InlineKeyboardMarkup([InlineKeyboardButton.WithCallbackData("Да",
+					new CallbackData(nameof(Start), Commands.ParamsToString(user.Id.ToString(), bool.TrueString))),
+					InlineKeyboardButton.WithCallbackData("Нет", new CallbackData(nameof(Start), Commands.ParamsToString(user.Id.ToString(), bool.FalseString)))]);
+				await this.Client.TelegramClient.SendDocumentAsync(botOwnerChatId, InputFile.FromFileId(document.FileId),
+					caption: $"{user.Id.ToString().Link(user.FirstName)} пытается обновить этот файл. Разрешить?",
+					parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: replyMarkup);
+
+				return "Отправлен запрос на обновление файла";
+			}
+
 			return this.Device.IsGroup || this.Device.IsChannel || mode == SET_QUIET ? null : "Введите команду или выберите из меню";  
 		}
 
