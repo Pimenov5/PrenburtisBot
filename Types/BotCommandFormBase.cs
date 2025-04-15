@@ -146,6 +146,11 @@ namespace PrenburtisBot.Types
 					if (args[i] is string argument && Environment.GetEnvironmentVariable("MESSAGE_ID_ALIAS") is string messageIdAlias && argument == messageIdAlias)
 						args[i] = message.MessageId.ToString();
 
+				if (message.Message.Document is Document document)
+				{
+					Array.Resize(ref args, args.Length + 1);
+					args[^1] = document.FileId;
+				}
 
 				await this.Device.ActiveForm.NavigateTo(Commands.GetNewForm(command), args);
 			}
