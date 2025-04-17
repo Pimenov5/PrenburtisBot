@@ -53,7 +53,8 @@ namespace PrenburtisBot.Forms
 
 		public async Task<TextMessage> RenderAsync(long userId) => await RenderAsync(userId, null, null);
 		public async Task<TextMessage> RenderAsync(long userId, string? courtId) => await RenderAsync(userId, courtId, null);
-		public async Task<TextMessage> RenderAsync(long userId, string? courtId, string? messageIdToDelete)
+		public async Task<TextMessage> RenderAsync(long userId, string? courtId, string? messageIdToDelete) => await RenderAsync(userId, courtId, messageIdToDelete, null);
+		public async Task<TextMessage> RenderAsync(long userId, string? courtId, string? messageIdToDelete, string? needShuffleButton)
 		{
 			string text = CourtPlayers.ToString(ref courtId, userId, this.Device.IsGroup);
 
@@ -61,7 +62,10 @@ namespace PrenburtisBot.Forms
 			if (text.Contains('#') && !string.IsNullOrEmpty(courtId) && Environment.GetEnvironmentVariable("MESSAGE_ID_ALIAS") is string messageIdAlias)
 			{
 				buttonForm = new();
-				buttonForm.AddButtonRow(new ButtonBase("🔄", new CallbackData(nameof(CourtPlayers), Commands.ParamsToString(courtId, messageIdAlias)).Serialize()));
+				if (bool.TryParse(needShuffleButton, out bool addShuffleButton) && addShuffleButton)
+					buttonForm.AddButtonRow(new ButtonBase("🔀", new CallbackData(nameof(ShuffleCourt), Commands.ParamsToString(courtId, messageIdAlias)).Serialize()));
+				else
+					buttonForm.AddButtonRow(new ButtonBase("🔄", new CallbackData(nameof(CourtPlayers), Commands.ParamsToString(courtId, messageIdAlias)).Serialize()));
 			}
 
 			if (!string.IsNullOrEmpty(messageIdToDelete) && int.TryParse(messageIdToDelete, out int messageId))
