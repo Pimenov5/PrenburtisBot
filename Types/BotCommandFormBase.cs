@@ -44,8 +44,12 @@ namespace PrenburtisBot.Types
 				Array.Resize(ref args, _args.Length);
 				int index = 0;
 				for (int i = index; i < args.Length; i++)
-					if (_args[i].ToString() is string argument)
+				{
+					if (_args[i] is null)
+						args[index++] = string.Empty;
+					else if (_args[i].ToString() is string argument)
 						args[index++] = argument;
+				}
 
 				Array.Resize(ref args, index);
 				_args = [];
