@@ -40,22 +40,9 @@
 		{
 			List<Player> players = new(collection);
 			players.Sort((Player x, Player y) => y.Rating.CompareTo(x.Rating));
-			uint?[] result = new uint?[players.Count];
+			List<uint?> result = new (players.Count);
 
-			int i = -1;
 			Random random = new();
-			Dictionary<uint, List<Player>> teams = [];
-
-			void AddPlayer(Player player)
-			{
-				result[++i] = this.AddPlayer(player, random);
-				if (result[i] is uint index)
-				{
-					if (!teams.ContainsKey(index))
-						teams.Add(index, []);
-					teams[index].Add(player);
-				}
-			}
 
 			bool isEmpty = true;
 			foreach (Team team in this.Teams)
@@ -75,7 +62,7 @@
 						int count = this.TeamCount < players.Count ? this.TeamCount : players.Count;
 						List<Player> range = players.GetRange(0, count);
 						foreach (Player player in range)
-							AddPlayer(player);
+							result.Add(this.AddPlayer(player, random));
 
 						players.RemoveRange(0, count);
 					}
@@ -88,16 +75,10 @@
 			else
 			{
 				foreach (Player player in players)
-					AddPlayer(player);
+					result.Add(this.AddPlayer(player, random));
 			}
 
-			if (Environment.GetEnvironmentVariable("NEED_POST_SHUFFLE_PLAYERS") is string value && bool.TryParse(value, out bool needPostShuffle) && needPostShuffle)
-			{
-				foreach (uint index in teams.Keys)
-					this.Teams[index].Shuffle(teams[index].ToArray(), random);
-			}
-
-			return result;
+			return result.ToArray();
         }
 	}
 }
