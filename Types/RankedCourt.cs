@@ -3,6 +3,7 @@
 	internal class RankedCourt(long userId, List<Team> teams, uint teamMaxPlayerCount) : Court(userId, teams, teamMaxPlayerCount)
 	{
 		private bool _mustSort = true;
+		private delegate IComparable GetComparableInterface(Team team);
 
 		protected override List<Team> GetTeams(Player player)
 		{
@@ -21,17 +22,20 @@
 
 			List<Team> teams = base.GetTeams(player);
 
-			if (teams.Count > 1)
+			void SortAndRemoveTeams(GetComparableInterface func)
 			{
-				if (_mustSort)
-				{
-					teams.Sort((Team a, Team b) => a.GetRankCount(player.Rank).CompareTo(b.GetRankCount(player.Rank)));
-					teams.RemoveAll((Team team) => team.GetRankCount(player.Rank) != teams.First().GetRankCount(player.Rank));
-				}
+				if (teams.Count <= 1)
+					return;
 
-				teams.Sort((Team a, Team b) => a.PlayerCount.CompareTo(b.PlayerCount));
-				teams.RemoveAll((Team team) => team.PlayerCount != teams.First().PlayerCount);
+				teams.Sort((Team x, Team b) => func(x).CompareTo(func(b)));
+				teams.RemoveAll((Team team) => !func(team).Equals(func(teams.First())));
 			}
+
+			SortAndRemoveTeams((Team team) => team.PlayerCount);
+			if (_mustSort)
+				SortAndRemoveTeams((Team team) => team.GetRankCount(player.Rank));
+			else
+				SortAndRemoveTeams((Team team) => team.RatingSum);
 
 			return teams;
 		}
