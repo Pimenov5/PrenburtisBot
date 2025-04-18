@@ -14,6 +14,7 @@
 		public int RemovePlayer(long userId) => _players.RemoveAll((Player player) => player.UserId == userId);
 		public void RemovePlayers(int index, int count) => _players.RemoveRange(index, count);
 		public int GetRankCount(int rank) => _players.Count((Player player) => player.Rank == rank);
+		public double RatingSum => _players.Sum((Player player) => player.Rating);
 		public bool Contains(long userId) => _players.Any((Player player) => player.UserId == userId);
 		public uint Shuffle(Player[] players, Random? random = null)
 		{
