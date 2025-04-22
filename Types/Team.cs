@@ -52,5 +52,6 @@
 
 			return (uint)(_names.Count - count);
 		}
+		public static void ClearNames() => _names.Clear();
 	}
 }
