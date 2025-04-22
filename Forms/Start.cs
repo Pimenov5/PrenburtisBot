@@ -1,4 +1,5 @@
 ﻿using PrenburtisBot.Attributes;
+using PrenburtisBot.BeforeBotStart;
 using PrenburtisBot.Types;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -54,6 +55,9 @@ namespace PrenburtisBot.Forms
 					System.IO.File.WriteAllBytes(path, memoryStream.GetBuffer());
 
 					text = "Файл успешно обновлён";
+
+					Team.ClearNames();
+					text += Environment.NewLine + ReadTeamsNames.FromFile();
 				}
 				else
 					text = "Обновление файла было отклонено";
@@ -61,7 +65,7 @@ namespace PrenburtisBot.Forms
 			catch (Exception e)
 			{
 				Console.Error.WriteLine(e);
-				text = e.Message;
+				text += Environment.NewLine + e.Message;
 			}
 
 			if (chatId.Identifier != this.Device.DeviceId)
