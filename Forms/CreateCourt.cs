@@ -40,13 +40,7 @@ namespace PrenburtisBot.Forms
 				teamMaxPlayerCount = infos[0].Key;
 			}
 
-			List<Team> teams = new(capacity);
-			string[] names = Team.Names;
-			Random? random = names.Length >= teams.Capacity ? new() : null;
-			for (int i = 0; i < teams.Capacity; i++)
-				teams.Add(new(random is null ? null : names[random.Next(names.Length)]));
-
-			RankedCourt court = new(userId, teams, teamMaxPlayerCount);
+			RankedCourt court = new(userId, Court.CreateTeams(capacity, Team.Names), teamMaxPlayerCount);
 			courtId = Courts.Add(court);
 			return court;
 		}

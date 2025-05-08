@@ -48,6 +48,23 @@
 			_teams = teams;
 		}
 
+		public static List<Team> CreateTeams(int count, IEnumerable<string> teamsNames)
+		{
+			List<Team> result = new(count);
+			List<string> names = [.. teamsNames];
+
+			Random? random = names.Count >= result.Capacity ? new() : null;
+			for (int i = 0; i < count; i++)
+			{
+				string? name = random is null ? null : names[random.Next(names.Count)];
+				result.Add(new Team(name));
+				if (!string.IsNullOrEmpty(name))
+					names.Remove(name);
+			}
+
+			return result;
+		}
+
 		public uint? AddPlayer(Player player, Random? random = null)
 		{
 			List<Team> teams = this.GetTeams(player);
@@ -111,13 +128,9 @@
 					if (!string.IsNullOrEmpty(team.Name))
 						usedNames.Add(team.Name);
 
-				List<string> names = usedNames.Count == 0 ? [] : new(Team.Names);
-				foreach (string name in usedNames)
-					names.Remove(name);
-
-				Random? random = names.Count >= teamCount - prevTeamCount ? new() : null;
-				for (int i = 0; i < teamCount - prevTeamCount; i++)
-					_teams.Add(new Team(random is null ? null : names[random.Next(names.Count)]));
+				List<string> teamsNames = [.. Team.Names];
+				teamsNames.RemoveAll((string name) => usedNames.Contains(name));
+				_teams.AddRange(Court.CreateTeams((int)teamCount - prevTeamCount, teamsNames));
 			}
 			else if (teamCount < prevTeamCount)
 			{
