@@ -47,7 +47,7 @@
 		public static uint ReadNames(TextReader reader)
 		{
 			int count = _names.Count;
-			while (reader.ReadLine() is string name)
+			while (reader.ReadLine()?.Trim() is string name && !string.IsNullOrEmpty(name))
 				_names.Add(name);
 
 			return (uint)(_names.Count - count);
