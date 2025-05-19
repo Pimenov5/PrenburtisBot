@@ -173,9 +173,10 @@ namespace PrenburtisBot.Forms
 				throw new Exception($"Вы уже отправили рейтинги игроков в {timestamp}");
 
 			bool needSort = s_sortedPlayers is null;
-			s_sortedPlayers ??= Users.GetPlayers().ToList();
+			s_sortedPlayers ??= [..Users.GetPlayers()];
+			s_sortedPlayers.RemoveAll((Player player) => !player.IsActual);
 			if (s_sortedPlayers.Count == 0)
-				throw new InvalidOperationException("Список постоянных игроков пуст");
+				throw new InvalidOperationException("Список постоянных активных игроков пуст");
 			if (needSort)
 				s_sortedPlayers.Sort((Player x, Player y) => x.FirstName.CompareTo(y.FirstName));
 
