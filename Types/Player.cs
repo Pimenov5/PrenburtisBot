@@ -2,7 +2,8 @@
 
 ﻿namespace PrenburtisBot.Types
 {
-	internal class Player(long userId, int rank, string firstName, double rating, bool isActual)
+	internal enum Gender { Male, Female };
+	internal class Player(long userId, int rank, string firstName, double rating, bool isActual, Gender gender)
 	{
 		private string _firstName = firstName;
 
@@ -12,6 +13,7 @@
 		public string? Username;
 		public readonly double Rating = rating;
 		public readonly bool IsActual = isActual;
+		public readonly Gender Gender = gender;
 
 		public string Link => $"tg://user?id={this.UserId}".Link(this.FirstName);
 		public override string ToString() => this.Link;

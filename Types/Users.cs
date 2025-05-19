@@ -4,12 +4,13 @@ namespace PrenburtisBot.Types
 {
 	internal static class Users
 	{
-		private struct User(long userId, string firstName, double rating, bool isActual)
+		private struct User(long userId, string firstName, double rating, bool isActual, Gender gender)
 		{
 			public long UserId = userId;
 			public string FirstName = firstName;
 			public double Rating = rating;
 			public bool IsActual = isActual;
+			public Gender Gender = gender;
 		}
 
 		private class PlayerEqualityComparer : EqualityComparer<Player>
@@ -25,11 +26,16 @@ namespace PrenburtisBot.Types
 			List<User> users = [];
 			while (reader.HasRows && reader.Read())
 			{
-				const int FIELD_COUNT = 4;
+				const int FIELD_COUNT = 5;
 				if (reader.FieldCount < FIELD_COUNT)
 					throw new ArgumentOutOfRangeException(nameof(reader), $"Количество полей в запросе должно быть не меньше {FIELD_COUNT}");
 
-				users.Add(new(reader.GetInt64(0), reader.GetString(1), reader.GetDouble(2), reader.GetBoolean(3)));
+				long userId = reader.GetInt64(0);
+				string firstName = reader.GetString(1);
+				char genderChar = reader.GetChar(4);
+
+				users.Add(new(userId, firstName, reader.GetDouble(2), reader.GetBoolean(3), 
+					genderChar switch { 'M' => Gender.Male, 'F' => Gender.Female, _ => throw new InvalidCastException($"\"{genderChar}\" не является полом игрока {firstName} ({userId})")}));
 			}
 
 			if (users.Count == 0)
@@ -41,7 +47,7 @@ namespace PrenburtisBot.Types
 			foreach (User user in users) 
 			{
 				rank = Math.Truncate(user.Rating) != Math.Truncate(prevRating) ? ++rank : rank;
-				_players.Add(new(user.UserId, rank, user.FirstName, user.Rating, user.IsActual));
+				_players.Add(new(user.UserId, rank, user.FirstName, user.Rating, user.IsActual, user.Gender));
 				prevRating = user.Rating;
 			}
 
@@ -51,7 +57,7 @@ namespace PrenburtisBot.Types
 		public static IReadOnlyCollection<Player> GetPlayers() => _players;
 		public static Player GetPlayer(long userId, string firstName, string? username = null)
 		{
-			Player equalValue = new(userId, default, firstName, default, default);
+			Player equalValue = new(userId, default, firstName, default, default, default);
 			if (!_players.TryGetValue(equalValue, out Player? result))
 				return equalValue;
 
