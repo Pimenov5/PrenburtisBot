@@ -49,10 +49,12 @@ namespace PrenburtisBot.Forms
 				if (isConfirmed)
 				{
 					fileId = string.IsNullOrEmpty(fileId) ? throw GetException($"идентификатор файла") : fileId;
-					using MemoryStream memoryStream = new();
-					Telegram.Bot.Types.File file = await this.Client.TelegramClient.GetInfoAndDownloadFileAsync(fileId, memoryStream);
 					string? path = Environment.GetEnvironmentVariable("TEAMS_NAMES") ?? throw new NullReferenceException();
-					System.IO.File.WriteAllBytes(path, memoryStream.GetBuffer());
+					using (FileStream fileStream = System.IO.File.OpenWrite(path))
+					{
+						fileStream.SetLength(0);
+						await this.Client.TelegramClient.GetInfoAndDownloadFileAsync(fileId, fileStream);
+					}
 
 					text = "Файл успешно обновлён";
 
