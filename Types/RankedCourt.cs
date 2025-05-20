@@ -3,6 +3,7 @@
 	internal class RankedCourt(long userId, List<Team> teams, uint teamMaxPlayerCount) : Court(userId, teams, teamMaxPlayerCount)
 	{
 		private bool _mustSort = true;
+		private Gender? _genderMinority;
 		private delegate IComparable GetComparableInterface(Team team);
 
 		protected override List<Team> GetTeams(Player player)
@@ -35,7 +36,11 @@
 			if (_mustSort)
 				SortAndRemoveTeams((Team team) => team.GetRankCount(player.Rank));
 			else
+			{
+				if (_genderMinority is Gender genderMinority && player.Gender == genderMinority)
+					SortAndRemoveTeams((Team team) => team.GetGenderCount(player.Gender));
 				SortAndRemoveTeams((Team team) => team.RatingSum);
+			}
 
 			return teams;
 		}
@@ -58,6 +63,10 @@
 
 			if (isEmpty)
 			{
+				int femaleCount = players.Count((Player player) => player.Gender == Gender.Female);
+				int maleCount = players.Count - femaleCount;
+				_genderMinority = maleCount == femaleCount ? null : maleCount > femaleCount ? Gender.Female : Gender.Male;
+
 				_mustSort = false;
 				try
 				{
@@ -74,6 +83,7 @@
 				finally
 				{
 					_mustSort = true;
+					_genderMinority = null;
 				}
 			}
 			else
