@@ -40,7 +40,7 @@ namespace PrenburtisBot.Types
 				return;
 
 			if (Environment.GetEnvironmentVariable("DELETE_APPEAL_TO_BOT_IN_GROUPS") is string value && bool.TryParse(value, out bool mustDelete) && mustDelete)
-				await this.Device.DeleteMessage(message.MessageId);
+				await message.DeleteMessage();
 
 			if (!string.IsNullOrEmpty(textMessage.Text))
 			{
