@@ -10,9 +10,10 @@ namespace PrenburtisBot.Types
 	{
 		private object[] _args = [];
 
-		public BotCommandFormBase() => this.Init += async (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
+		public BotCommandFormBase() => this.Init += (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
 		{
 			_args = initArgs.Args;
+			return Task.CompletedTask;
 		};
 
 		public override async Task Render(MessageResult message)
