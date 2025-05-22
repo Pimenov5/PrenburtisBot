@@ -18,7 +18,8 @@ namespace PrenburtisBot.Forms
             if (message.BotCommandParameters is List<string> commandParameters && commandParameters.Count > 0 && TimeOnly.TryParse(commandParameters[0], out TimeOnly timeOnly))
                 question += " в " + commandParameters[0];
 
-            if (Session.Get(typeof(SendPoll), this.Device.DeviceId.ToString()) is string pinnedMessageId && int.TryParse(pinnedMessageId, out int messageId))
+            int messageId = default;
+            if (Session.Get(typeof(SendPoll), this.Device.DeviceId.ToString()) is string pinnedMessageId && int.TryParse(pinnedMessageId, out messageId))
             {
                 try
                 {
@@ -37,7 +38,7 @@ namespace PrenburtisBot.Forms
             Session.Set(typeof(SendPoll), this.Device.DeviceId.ToString(), pollMessage.MessageId.ToString());
             Session.Write();
 
-            return new TextMessage(string.Empty).NavigateToStart(Start.SET_QUIET);
+            return new TextMessage(string.Empty) { NavigateTo = messageId == default ? new(new Start(), Start.SET_QUIET) : new(new StopPoll(), this.Device.DeviceId, messageId) };
         }
     }
 }

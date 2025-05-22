@@ -7,17 +7,43 @@ namespace PrenburtisBot.Types
 {
 	internal class BotCommandGroupFormBase : GroupForm
 	{
+		private object[]? _initArgs;
+
+		public BotCommandGroupFormBase() => this.Init += (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
+		{
+			_initArgs = initArgs.Args;
+			return Task.CompletedTask;
+		};
+
 		public override async Task Render(MessageResult message)
 		{
+			Type[] types;
+			object?[] parameters;
+			if (_initArgs is not null && _initArgs.Length > 0)
+			{
+				types = new Type[_initArgs.Length];
+				parameters = new object?[types.Length];
+				for (int i = 0; _initArgs is not null && i < _initArgs.Length; i++)
+				{
+					types[i] = _initArgs[i].GetType();
+					parameters[i] = _initArgs[i];
+				}
+			}
+			else
+			{
+				types = [message.GetType()];
+				parameters = [message];
+			}
+
 			const string METHOD_NAME = "RenderAsync";
-			MethodInfo? methodInfo = this.GetType().GetMethod(METHOD_NAME, [message.GetType()]);
+			MethodInfo? methodInfo = this.GetType().GetMethod(METHOD_NAME, types);
 			if (methodInfo is null)
 				return;
 
 			TextMessage? textMessage;
 			try
 			{
-				object? result = methodInfo.Invoke(this, [message]);
+				object? result = methodInfo.Invoke(this, parameters);
 				if (result is Task task)
 					await task;
 
@@ -40,7 +66,7 @@ namespace PrenburtisBot.Types
 				return;
 
 			if (Environment.GetEnvironmentVariable("DELETE_APPEAL_TO_BOT_IN_GROUPS") is string value && bool.TryParse(value, out bool mustDelete) && mustDelete)
-				await this.Device.DeleteMessage(message.MessageId);
+				await message.DeleteMessage();
 
 			if (!string.IsNullOrEmpty(textMessage.Text))
 			{
