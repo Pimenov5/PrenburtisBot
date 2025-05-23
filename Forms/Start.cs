@@ -13,6 +13,14 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Запустить бота или отменить выполнение текущей команды")]
 	internal class Start : BotCommandFormBase
 	{
+		public override async Task Render(MessageResult message)
+		{
+			if (this.InitArgs.Length == 1 && this.InitArgs[0].Equals(SET_QUIET))
+				return;
+			else
+				await base.Render(message);
+		}
+
 		public async Task<string?> RenderAsync() => await RenderAsync(null);
 		public async Task<string?> RenderAsync(string? mode)
 		{
