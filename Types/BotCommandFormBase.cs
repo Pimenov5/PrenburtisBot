@@ -10,6 +10,8 @@ namespace PrenburtisBot.Types
 	{
 		private object[] _args = [];
 
+		protected object[] InitArgs => _args;
+
 		public BotCommandFormBase() => this.Init += (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
 		{
 			_args = initArgs.Args;
