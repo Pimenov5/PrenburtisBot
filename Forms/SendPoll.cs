@@ -31,7 +31,11 @@ namespace PrenburtisBot.Forms
                 }
             }
 
-            Telegram.Bot.Types.Message pollMessage = await Device.Client.TelegramClient.SendPollAsync(Device.DeviceId, question, [PLAYER_JOINED, "👀"],
+            List<string> options = [PLAYER_JOINED, "👀"];
+            if (Environment.GetEnvironmentVariable("SEND_POLL_SECOND_OPTION") is string item && !string.IsNullOrEmpty(item))
+                options.Insert(1, item);
+
+            Telegram.Bot.Types.Message pollMessage = await Device.Client.TelegramClient.SendPollAsync(Device.DeviceId, question, options,
                 message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null, isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false);
 
             await Device.Client.TelegramClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId);
