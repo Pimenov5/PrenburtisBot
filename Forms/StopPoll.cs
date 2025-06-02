@@ -17,12 +17,10 @@ namespace PrenburtisBot.Forms
 
 		public async Task<TextMessage> RenderAsync(MessageResult message)
 		{
-			if (message.Message.ReplyToMessage is Message replyToMessage && replyToMessage.Poll is Poll poll && !poll.IsClosed)
-			{
-				return await RenderAsync(replyToMessage.Chat.Id, replyToMessage.MessageId);
-			}
+			if (message.Message.ReplyToMessage is Message replyToMessage && replyToMessage.Poll is Poll poll)
+				return poll.IsClosed ? new TextMessage(string.Empty).NavigateToStart(Start.SET_QUIET) : await RenderAsync(replyToMessage.Chat.Id, replyToMessage.MessageId);
 			else
-				throw new ArgumentException("Команда должна вызываться в ответ на незакрытый опрос", nameof(message));
+				throw new ArgumentException("Команда должна вызываться в ответ на опрос", nameof(message));
 		}
 	}
 }
