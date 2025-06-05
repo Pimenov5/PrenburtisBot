@@ -80,7 +80,7 @@ namespace PrenburtisBot.Types
 
 			if (methodInfo is null)
 			{
-				long userId = this.Device.IsGroup && message.Message is Message messageFrom && messageFrom.From is User user ? user.Id : this.Device.DeviceId;
+				long userId = this.Device.IsGroup && message.Message is Message messageFrom && messageFrom.From is Telegram.Bot.Types.User user ? user.Id : this.Device.DeviceId;
 				types.Insert(0, userId.GetType());
 				parameters.Insert(0, userId);
 				methodInfo = this.GetType().GetMethod(METHOD_NAME, types.ToArray()) ?? this.GetType().GetMethod(ASYNC_METHOD_NAME, types.ToArray());

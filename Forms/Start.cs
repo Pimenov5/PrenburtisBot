@@ -24,7 +24,7 @@ namespace PrenburtisBot.Forms
 		public async Task<string?> RenderAsync() => await RenderAsync(null);
 		public async Task<string?> RenderAsync(string? mode)
 		{
-			if (this.Device.LastMessage is Message message && message.From is User user && message.Document is Document document && document.FileName is string documentFileName
+			if (this.Device.LastMessage is Message message && message.From is Telegram.Bot.Types.User user && message.Document is Document document && document.FileName is string documentFileName
 				&& Environment.GetEnvironmentVariable("TEAMS_NAMES") is string fileName && documentFileName.Equals(Path.GetFileName(fileName)))
 			{
 				if (!long.TryParse(Environment.GetEnvironmentVariable("BOT_OWNER_CHAT_ID"), out long botOwnerChatId))

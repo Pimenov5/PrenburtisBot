@@ -42,7 +42,7 @@ namespace PrenburtisBot.Forms
 			Dictionary<string, Player> result = new(players.Count);
 			foreach (Player player in players)
 			{
-				if (!player.IsActual)
+				if (player is not Types.User user || !user.NeedVote)
 					continue;
 
 				foreach (Player item in players)
@@ -174,7 +174,7 @@ namespace PrenburtisBot.Forms
 
 			bool needSort = s_sortedPlayers is null;
 			s_sortedPlayers ??= [..Users.GetPlayers()];
-			s_sortedPlayers.RemoveAll((Player player) => !player.IsActual);
+			s_sortedPlayers.RemoveAll((Player player) => player is not Types.User user || !user.NeedVote || !user.CanVote);
 			if (s_sortedPlayers.Count == 0)
 				throw new InvalidOperationException("Список постоянных активных игроков пуст");
 			if (needSort)
@@ -188,10 +188,8 @@ namespace PrenburtisBot.Forms
 					break;
 				}
 
-			if (userAsPlayer is null)
-				throw new Exception("Только игроки из списка постоянных могут заполнять рейтинги");
-			if (!userAsPlayer.IsActual)
-				throw new Exception("Только активные игроки могут заполнять рейтинги");
+			if (userAsPlayer is not Types.User user || !user.CanVote)
+				throw new Exception("Только постоянные игроки с допуском могут заполнять рейтинги");
 
 			s_players ??= VoteRatings.CreatePlayers(s_sortedPlayers);
 

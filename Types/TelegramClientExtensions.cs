@@ -31,7 +31,7 @@ namespace PrenburtisBot.Types
 			List<Player> players = new(votes.count);
 			foreach (MessagePeerVoteBase vote in votes.votes)
 			{
-				User user = votes.users[vote.Peer.ID];
+				TL.User user = votes.users[vote.Peer.ID];
 				players.Add(Users.GetPlayer(vote.Peer.ID, user.first_name, user.username));
 			}
 
