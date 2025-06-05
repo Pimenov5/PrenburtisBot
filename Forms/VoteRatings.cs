@@ -22,15 +22,8 @@ namespace PrenburtisBot.Forms
 			if (s_connection is not null)
 				return;
 
-			const string PRENBURTIS_DATA_BASE = "PRENBURTIS_DATA_BASE";
-			string path = Environment.GetEnvironmentVariable(PRENBURTIS_DATA_BASE)
-				?? throw new NullReferenceException($"Отсутствует значение переменной окружения \"{PRENBURTIS_DATA_BASE}\"");
-
-			if (!System.IO.File.Exists(path))
-				throw new FileNotFoundException($"Отсутствует файл БД с путём: {path}");
-
-			SqliteConnectionStringBuilder builder = new() { Mode = SqliteOpenMode.ReadWrite, DataSource = path };
-			s_connection = new(builder.ConnectionString);
+			SqliteConnectionStringBuilder builder = new() { Mode = SqliteOpenMode.ReadWrite };
+			s_connection = new(builder.SetDataSource("PRENBURTIS_DATA_BASE").ConnectionString);
 			s_connection.Open();
 		}
 
