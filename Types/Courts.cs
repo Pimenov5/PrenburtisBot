@@ -57,5 +57,7 @@
 		}
 
 		public static int IndexOf(Court court) => _courts.IndexOf(court);
+
+		public static int Count => _courts.Count;
 	}
 }

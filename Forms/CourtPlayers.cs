@@ -28,7 +28,7 @@ namespace PrenburtisBot.Forms
 				teams = [];
 
 			StringBuilder stringBuilder = new(count == 0 ? "Нет игроков на площадке"
-				: $"{count} из {maxCount} игроков на площадке{((isGroup ?? false) && Courts.IndexOf(court) is int index && index >= 0 ? $" с ID {index}" : string.Empty)}"
+				: $"{count} из {maxCount} игроков на площадке{((isGroup ?? false) && Courts.Count > 1 && Courts.IndexOf(court) is int index && index >= 0 ? $" с ID {index}" : string.Empty)}"
 				+ Environment.NewLine);
 
 			int i = default;
