@@ -27,7 +27,7 @@ namespace PrenburtisBot.Types
 				Gender gender = genderChar switch { 'M' => Gender.Male, 'F' => Gender.Female,
 					_ => throw new InvalidCastException($"\"{genderChar}\" не является полом игрока {firstName} ({userId})") };
 
-				_users.Add(new(userId, firstName, reader.GetDouble(2), gender, reader.GetBoolean(4), reader.GetBoolean(5)));
+				_users.Add(new(userId, firstName, reader.IsDBNull(2) ? default : reader.GetDouble(2), gender, reader.GetBoolean(4), reader.GetBoolean(5)));
 			}
 
 			return _users.Count - count;
