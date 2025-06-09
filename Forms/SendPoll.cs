@@ -1,6 +1,7 @@
 ﻿using PrenburtisBot.Attributes;
 using System.Globalization;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TelegramBotBase.Base;
 using PrenburtisBot.Types;
@@ -35,12 +36,21 @@ namespace PrenburtisBot.Forms
             if (Environment.GetEnvironmentVariable("SEND_POLL_SECOND_OPTION") is string item && !string.IsNullOrEmpty(item))
                 options.Insert(1, item);
 
-            Telegram.Bot.Types.Message pollMessage = await Device.Client.TelegramClient.SendPollAsync(Device.DeviceId, question, options,
+            Message pollMessage = await Device.Client.TelegramClient.SendPollAsync(Device.DeviceId, question, options,
                 message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null, isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false);
 
             await Device.Client.TelegramClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId);
             Session.Set(typeof(SendPoll), this.Device.DeviceId.ToString(), pollMessage.MessageId.ToString());
-            Session.Write();
+            Session.TryWrite();
+
+            Update[] updates = await this.Client.TelegramClient.GetUpdatesAsync(allowedUpdates: [UpdateType.Message]);
+            foreach (Update update in updates) 
+                if (update.Message is Message messageFromUpdate && messageFromUpdate.Chat.Id == this.Device.DeviceId && messageFromUpdate.Type == MessageType.MessagePinned 
+                    && messageFromUpdate.PinnedMessage is Message pinnedMessage && pinnedMessage.MessageId == pollMessage.MessageId)
+                {
+                    await this.Device.DeleteMessage(messageFromUpdate.MessageId);
+                    break;
+                }
 
             return new TextMessage(string.Empty) { NavigateTo = messageId == default ? new(new Start(), Start.SET_QUIET) : new(new StopPoll(), this.Device.DeviceId, messageId) };
         }
