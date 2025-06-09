@@ -174,7 +174,7 @@ namespace PrenburtisBot.Forms
 
 			bool needSort = s_sortedPlayers is null;
 			s_sortedPlayers ??= [..Users.GetPlayers()];
-			s_sortedPlayers.RemoveAll((Player player) => player is not Types.User user || !user.NeedVote || !user.CanVote);
+			s_sortedPlayers.RemoveAll((Player player) => player is not Types.User user || (!user.NeedVote && !user.CanVote));
 			if (s_sortedPlayers.Count == 0)
 				throw new InvalidOperationException("Список постоянных активных игроков пуст");
 			if (needSort)
