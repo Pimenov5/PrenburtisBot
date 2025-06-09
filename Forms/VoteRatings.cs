@@ -22,15 +22,8 @@ namespace PrenburtisBot.Forms
 			if (s_connection is not null)
 				return;
 
-			const string PRENBURTIS_DATA_BASE = "PRENBURTIS_DATA_BASE";
-			string path = Environment.GetEnvironmentVariable(PRENBURTIS_DATA_BASE)
-				?? throw new NullReferenceException($"Отсутствует значение переменной окружения \"{PRENBURTIS_DATA_BASE}\"");
-
-			if (!System.IO.File.Exists(path))
-				throw new FileNotFoundException($"Отсутствует файл БД с путём: {path}");
-
-			SqliteConnectionStringBuilder builder = new() { Mode = SqliteOpenMode.ReadWrite, DataSource = path };
-			s_connection = new(builder.ConnectionString);
+			SqliteConnectionStringBuilder builder = new() { Mode = SqliteOpenMode.ReadWrite };
+			s_connection = new(builder.SetDataSource("PRENBURTIS_DATA_BASE").ConnectionString);
 			s_connection.Open();
 		}
 
@@ -122,7 +115,6 @@ namespace PrenburtisBot.Forms
 			foreach (KeyValuePair<Player, int> vote in _votes)
 				stringBuilder.Append("({0}, " + $"{vote.Key.UserId}, {vote.Value})" + VALUES_DELIMITER);
 			stringBuilder.Remove(stringBuilder.Length - VALUES_DELIMITER.Length, VALUES_DELIMITER.Length);
-			stringBuilder.Append(" RETURNING *");
 
 			int count = default;
 			using SqliteTransaction transaction = (s_connection ?? throw new NullReferenceException()).BeginTransaction();
@@ -132,13 +124,13 @@ namespace PrenburtisBot.Forms
 
 				using SqliteCommand command = new(string.Format(stringBuilder.ToString(), formUserId), s_connection ?? throw new NullReferenceException(), transaction);
 				using SqliteDataReader reader = command.ExecuteReader();
-				if (!reader.HasRows)
-					throw new Exception("Не удалось выполнить:" + Environment.NewLine + command.CommandText);
+				count = reader.RecordsAffected;
 
-				while (reader.Read())
-					count++;
-
-				transaction.Commit();
+				if (count == _votes.Count)
+					transaction.Commit();
+				else 
+					throw new Exception("Данные не могут быть сохранены, т.к. количество внесённых в БД записей" 
+						+ count switch { 0 => " равно 0", _ => $"({count}) не равно количеству ваших ответов ({_votes.Count})" });
 			}
 			catch
 			{
