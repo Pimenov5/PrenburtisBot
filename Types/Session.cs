@@ -32,6 +32,19 @@ namespace PrenburtisBot.Types
 			JsonSerializer.Serialize(writer, _types);
 			writer.Flush();
 		}
+		public static bool TryWrite()
+		{
+			try
+			{
+				Session.Write();
+				return true;
+			}
+			catch (Exception e)
+			{
+				Console.Error.WriteLine(e);
+				return false;
+			}
+		}
 
 		public static bool Read()
 		{
