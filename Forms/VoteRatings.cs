@@ -115,7 +115,6 @@ namespace PrenburtisBot.Forms
 			foreach (KeyValuePair<Player, int> vote in _votes)
 				stringBuilder.Append("({0}, " + $"{vote.Key.UserId}, {vote.Value})" + VALUES_DELIMITER);
 			stringBuilder.Remove(stringBuilder.Length - VALUES_DELIMITER.Length, VALUES_DELIMITER.Length);
-			stringBuilder.Append(" RETURNING *");
 
 			int count = default;
 			using SqliteTransaction transaction = (s_connection ?? throw new NullReferenceException()).BeginTransaction();
@@ -125,13 +124,13 @@ namespace PrenburtisBot.Forms
 
 				using SqliteCommand command = new(string.Format(stringBuilder.ToString(), formUserId), s_connection ?? throw new NullReferenceException(), transaction);
 				using SqliteDataReader reader = command.ExecuteReader();
-				if (!reader.HasRows)
-					throw new Exception("Не удалось выполнить:" + Environment.NewLine + command.CommandText);
+				count = reader.RecordsAffected;
 
-				while (reader.Read())
-					count++;
-
-				transaction.Commit();
+				if (count == _votes.Count)
+					transaction.Commit();
+				else 
+					throw new Exception("Данные не могут быть сохранены, т.к. количество внесённых в БД записей" 
+						+ count switch { 0 => " равно 0", _ => $"({count}) не равно количеству ваших ответов ({_votes.Count})" });
 			}
 			catch
 			{
