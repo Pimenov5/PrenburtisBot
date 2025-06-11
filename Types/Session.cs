@@ -27,6 +27,7 @@ namespace PrenburtisBot.Types
 			if (string.IsNullOrEmpty(Path))
 				throw new NullReferenceException($"Невозможно записать данные сессии, т.к. не задано значение свойства {nameof(Path)}");
 			using FileStream fileStream = File.Exists(Path) ? File.OpenWrite(Path) : File.Create(Path);
+			fileStream.SetLength(0);
 			using Utf8JsonWriter writer = new(fileStream);
 
 			JsonSerializer.Serialize(writer, _types);
