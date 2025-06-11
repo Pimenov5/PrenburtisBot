@@ -47,12 +47,11 @@
 		public string FormatName(string format = " {0}") => string.IsNullOrEmpty(this.Name) ? string.Empty : string.Format(format, this.Name);
 		public static uint ReadNames(TextReader reader)
 		{
-			int count = _names.Count;
+			_names.Clear();
 			while (reader.ReadLine()?.Trim() is string name && !string.IsNullOrEmpty(name))
 				_names.Add(name);
 
-			return (uint)(_names.Count - count);
+			return (uint)_names.Count;
 		}
-		public static void ClearNames() => _names.Clear();
 	}
 }

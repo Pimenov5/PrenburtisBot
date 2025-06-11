@@ -65,8 +65,6 @@ namespace PrenburtisBot.Forms
 					}
 
 					text = "Файл успешно обновлён";
-
-					Team.ClearNames();
 					text += Environment.NewLine + ReadTeamsNames.FromFile();
 				}
 				else
