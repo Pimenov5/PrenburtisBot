@@ -4,9 +4,11 @@ namespace PrenburtisBot.Types
 {
 	internal static class Session
 	{
+		private static string? s_path;
 		private static Dictionary<string, Dictionary<string, string>> _types = [];
 
-		public static string? Path;
+		public static string? Path { get => s_path ?? Environment.GetEnvironmentVariable((nameof(Session) + '_' + nameof(Session.Path)).ToUpper()); 
+			set { s_path = !string.IsNullOrEmpty(value) ? value : throw new NullReferenceException(); } }
 
 		public static void Set(Type type, string key, string value)
 		{
