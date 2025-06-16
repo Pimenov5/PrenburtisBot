@@ -43,7 +43,7 @@ namespace PrenburtisBot.Forms
             Session.Set(typeof(SendPoll), this.Device.DeviceId.ToString(), pollMessage.MessageId.ToString());
             Session.TryWrite();
 
-            Update[] updates = await this.Client.TelegramClient.GetUpdatesAsync(allowedUpdates: [UpdateType.Message]);
+            Update[] updates = await this.Client.TelegramClient.GetUpdatesAsync();
             foreach (Update update in updates) 
                 if (update.Message is Message messageFromUpdate && messageFromUpdate.Chat.Id == this.Device.DeviceId && messageFromUpdate.Type == MessageType.MessagePinned 
                     && messageFromUpdate.PinnedMessage is Message pinnedMessage && pinnedMessage.MessageId == pollMessage.MessageId)
