@@ -62,6 +62,9 @@
 					names.Remove(name);
 			}
 
+			if (Environment.GetEnvironmentVariable("TEAMS_NAMES_WRITE_SESSION") is string strValue && bool.TryParse(strValue, out bool boolValue) && boolValue)
+				Team.WriteSession(result);
+
 			return result;
 		}
 
