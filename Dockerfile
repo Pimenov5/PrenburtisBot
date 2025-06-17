@@ -53,4 +53,4 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 COPY --from=build /app .
 
 ENTRYPOINT ["dotnet", "PrenburtisBot.dll"]
-CMD ["ReadTeamsNames", "ReadUsers", "Login"]
+CMD ["ReadSession", "ReadTeamsNames", "ReadUsers", "Login"]
