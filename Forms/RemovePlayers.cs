@@ -16,9 +16,19 @@ namespace PrenburtisBot.Forms
 			if (court.UserId != userId)
 				return new("Удалять игроков из команд на площадке может только её создатель");
 
+			if (court.Teams.All((Team team) => team.PlayerCount == 0))
+				return new TextMessage(string.Empty) { NavigateTo = new(new CourtPlayers(), _courtId ?? throw new NullReferenceException(nameof(_courtId))) };
+
 			args = args.Length > 0 && args[0] == _courtId ? args[1..] : args;
 			if (args.Length == 0)
 				return new("Введите имена или юзернеймы игроков через пробел");
+			else if (args.Length == 1 && Environment.GetEnvironmentVariable("REMOVE_ALL_PLAYERS_ALIAS") is string alias && !string.IsNullOrEmpty(alias) && args[0] == alias)
+			{
+				foreach (Team team in court.Teams)
+					team.RemovePlayers(0, team.PlayerCount);
+
+				return new TextMessage(string.Empty) { NavigateTo = new(new CourtPlayers(), _courtId ?? throw new NullReferenceException(nameof(_courtId))) };
+			}
 
 			Dictionary<string, int[]> names = new(args.Length);
 			foreach (string name in args)
