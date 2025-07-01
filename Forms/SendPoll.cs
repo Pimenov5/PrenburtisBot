@@ -33,8 +33,9 @@ namespace PrenburtisBot.Forms
             }
 
             List<string> options = [PLAYER_JOINED, "👀"];
-            if (Environment.GetEnvironmentVariable("SEND_POLL_SECOND_OPTION") is string item && !string.IsNullOrEmpty(item))
-                options.Insert(1, item);
+            for (int i = 2; i <= 9; i++)
+                if (Environment.GetEnvironmentVariable($"SEND_POLL_OPTION_{i}") is string item && !string.IsNullOrEmpty(item))
+                    options.Insert(i - 1, item);
 
             Message pollMessage = await Device.Client.TelegramClient.SendPollAsync(Device.DeviceId, question, options,
                 message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null, isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false);
