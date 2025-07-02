@@ -19,7 +19,7 @@ namespace PrenburtisBot.Types
 		public string Text = text;
 		public TextMessageKind Kind = messageKind;
 		public ButtonForm? Buttons;
-		public ParseMode? ParseMode = null;
+		public ParseMode ParseMode;
 		public FormWithArgs NavigateTo;
 		public int? ReplyToMessageId;
 
@@ -30,7 +30,7 @@ namespace PrenburtisBot.Types
 			return this;
 		}
 
-		public TextMessage SetErrorKind(ParseMode parseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown)
+		public TextMessage SetErrorKind(ParseMode parseMode = ParseMode.Markdown)
 		{
 			this.Kind = TextMessageKind.Error;
 			this.Text = this.Text.Bold();

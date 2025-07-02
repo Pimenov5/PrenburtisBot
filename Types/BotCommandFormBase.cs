@@ -26,7 +26,7 @@ namespace PrenburtisBot.Types
 			string[] args = botCommandParameters.ToArray();
 
 			if (this.Device.IsGroup) {
-				string botUsername = '@' + (await this.Client.TelegramClient.GetMeAsync()).Username;
+				string botUsername = '@' + (await this.API.GetMe()).Username;
 				if (!string.IsNullOrEmpty(message.BotCommand) && args.Length > 0 && args[^1] == botUsername)
 					Array.Resize(ref args, args.Length - 1);
 				else
@@ -131,8 +131,8 @@ namespace PrenburtisBot.Types
 				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
 					InlineKeyboardMarkup? inlineKeyboardMarkup = this.Device.IsGroup ? null : textMessage.Buttons;
-					await this.Device.Client.TelegramClient.SendTextMessageAsync(this.Device.DeviceId, textMessage.Text,
-						message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null, textMessage.ParseMode, replyMarkup: inlineKeyboardMarkup);
+					await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, null, inlineKeyboardMarkup,
+						messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
 				}
 
 				if (textMessage.NavigateTo.Form is not null)

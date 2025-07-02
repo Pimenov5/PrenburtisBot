@@ -24,7 +24,7 @@ namespace PrenburtisBot.Forms
             {
                 try
                 {
-                    await this.Device.Client.TelegramClient.UnpinChatMessageAsync(this.Device.DeviceId, messageId);
+                    await this.API.UnpinChatMessage(this.Device.DeviceId, messageId);
                 }
                 catch (Exception e)
                 {
@@ -32,21 +32,21 @@ namespace PrenburtisBot.Forms
                 }
             }
 
-            List<string> options = [PLAYER_JOINED, "👀"];
+            List<InputPollOption> options = [PLAYER_JOINED, "👀"];
             for (int i = 2; i <= 9; i++)
                 if (Environment.GetEnvironmentVariable($"SEND_POLL_OPTION_{i}") is string item && !string.IsNullOrEmpty(item))
                     options.Insert(i - 1, item);
 
-            Message pollMessage = await Device.Client.TelegramClient.SendPollAsync(Device.DeviceId, question, options,
-                message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null, isAnonymous: false, type: PollType.Regular, allowsMultipleAnswers: false);
+            Message pollMessage = await this.API.SendPoll(Device.DeviceId, question, options, false, PollType.Regular, false, 
+                messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
 
-            await Device.Client.TelegramClient.PinChatMessageAsync(Device.DeviceId, pollMessage.MessageId);
+            await this.API.PinChatMessage(Device.DeviceId, pollMessage.MessageId);
             Session.Set(typeof(SendPoll), this.Device.DeviceId.ToString(), pollMessage.MessageId.ToString());
             Session.TryWrite();
 
-            Update[] updates = await this.Client.TelegramClient.GetUpdatesAsync();
+            Update[] updates = await this.API.GetUpdates();
             foreach (Update update in updates) 
-                if (update.Message is Message messageFromUpdate && messageFromUpdate.Chat.Id == this.Device.DeviceId && messageFromUpdate.Type == MessageType.MessagePinned 
+                if (update.Message is Message messageFromUpdate && messageFromUpdate.Chat.Id == this.Device.DeviceId && messageFromUpdate.Type == MessageType.PinnedMessage 
                     && messageFromUpdate.PinnedMessage is Message pinnedMessage && pinnedMessage.MessageId == pollMessage.MessageId)
                 {
                     await this.Device.DeleteMessage(messageFromUpdate.MessageId);

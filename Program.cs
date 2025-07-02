@@ -82,7 +82,7 @@ namespace PrenburtisBot
 				.CustomCommands(action =>
 				{
 					foreach (var command in Commands.GetCommands())
-						action.Add(command.Key, command.Value);
+						action.Add(new(command.Key, command.Value));
 				})
 				.NoSerialization()
 				.UseRussian()
@@ -106,7 +106,7 @@ namespace PrenburtisBot
 							&& Commands.GetChatId(attribute, type) is ChatId chatId && chatId != args.DeviceId:
 
 						case BotCommandScopeType.AllChatAdministrators when args.Device.IsGroup && args.OriginalMessage.From?.Id is long userId
-							&& ! new List<ChatMember>(await args.Device.Client.TelegramClient.GetChatAdministratorsAsync(args.DeviceId)).Any((ChatMember member) => member.User.Id == userId):
+							&& ! new List<ChatMember>(await args.Device.Client.TelegramClient.GetChatAdministrators(args.DeviceId)).Any((ChatMember member) => member.User.Id == userId):
 
 							Console.WriteLine($"Предотвращён вызов формы {type.Name} пользователем {args.OriginalMessage.From?.FirstName} в чате \"{args.Device.GetChatTitle()}\"");
 							return;
@@ -125,7 +125,7 @@ namespace PrenburtisBot
 			await Program.BeforeBotStartExecuteAsync(args);
 
 			await bot.Start();
-			Console.WriteLine($"Бот @{(await bot.Client.TelegramClient.GetMeAsync()).Username} запущен и работает");
+			Console.WriteLine($"Бот @{(await bot.Client.TelegramClient.GetMe()).Username} запущен и работает");
 			while (true) { }
 		}
 	}

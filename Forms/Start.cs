@@ -30,10 +30,10 @@ namespace PrenburtisBot.Forms
 				if (!long.TryParse(Environment.GetEnvironmentVariable("BOT_OWNER_CHAT_ID"), out long botOwnerChatId))
 					throw new Exception("Отсутствует идентификатор владельца бота");
 
-				IReplyMarkup replyMarkup = new InlineKeyboardMarkup([InlineKeyboardButton.WithCallbackData("Да",
+				IReplyMarkup replyMarkup = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Да",
 					new CallbackData(nameof(Start), Commands.ParamsToString(user.Id.ToString(), bool.TrueString))),
-					InlineKeyboardButton.WithCallbackData("Нет", new CallbackData(nameof(Start), Commands.ParamsToString(user.Id.ToString(), bool.FalseString)))]);
-				await this.Client.TelegramClient.SendDocumentAsync(botOwnerChatId, InputFile.FromFileId(document.FileId),
+					InlineKeyboardButton.WithCallbackData("Нет", new CallbackData(nameof(Start), Commands.ParamsToString(user.Id.ToString(), bool.FalseString))));
+				await this.API.SendDocument(botOwnerChatId, InputFile.FromFileId(document.FileId),
 					caption: $"{user.Id.ToString().Link(user.FirstName)} пытается обновить этот файл. Разрешить?",
 					parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: replyMarkup);
 
@@ -61,7 +61,7 @@ namespace PrenburtisBot.Forms
 					using (FileStream fileStream = System.IO.File.OpenWrite(path))
 					{
 						fileStream.SetLength(0);
-						await this.Client.TelegramClient.GetInfoAndDownloadFileAsync(fileId, fileStream);
+						await this.API.GetInfoAndDownloadFile(fileId, fileStream);
 					}
 
 					text = "Файл успешно обновлён";
@@ -77,7 +77,7 @@ namespace PrenburtisBot.Forms
 			}
 
 			if (chatId.Identifier != this.Device.DeviceId)
-				await this.Client.TelegramClient.SendTextMessageAsync(chatId, text);
+				await this.API.SendMessage(chatId, text);
 			return text;
 		}
 
@@ -92,7 +92,7 @@ namespace PrenburtisBot.Forms
 
 		public const string SET_QUIET = "sqe";
 
-		public static async Task<string> GetDeepLinkAsync(ITelegramBotClient botClient, Type type, params string[] args) => $"t.me/{(await botClient.GetMeAsync()).Username}"
+		public static async Task<string> GetDeepLinkAsync(ITelegramBotClient botClient, Type type, params string[] args) => $"t.me/{(await botClient.GetMe()).Username}"
 			+ $"?{nameof(Start).ToLower()}={type.Name.ToLower()}" + (args.Length == 0 ? string.Empty : Commands.PARAMS_DELIMITER + Commands.ParamsToString(args));
 	}
 }

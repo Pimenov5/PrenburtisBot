@@ -11,7 +11,7 @@ namespace PrenburtisBot.Forms
 	{
 		public async Task<TextMessage> RenderAsync(long chatId, int messageId)
 		{
-			await this.Client.TelegramClient.StopPollAsync(chatId, messageId);
+			await this.API.StopPoll(chatId, messageId);
 			return new TextMessage(string.Empty).NavigateToStart(Start.SET_QUIET);
 		}
 

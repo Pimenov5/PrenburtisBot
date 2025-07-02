@@ -250,7 +250,7 @@ namespace PrenburtisBot.Forms
 				+ "Чтобы изменить рейтинг конкретного игрока, ответьте на сообщение с его именем новым значением рейтинга (от 1 до 10)");
 
 			await this.TryDeleteLastMessage();
-			Message message = await this.Device.Client.TelegramClient.SendTextMessageAsync(this.Device.DeviceId, stringBuilder.ToString(), parseMode: ParseMode.Markdown);
+			Message message = await this.API.SendMessage(this.Device.DeviceId, stringBuilder.ToString(), parseMode: ParseMode.Markdown);
 			_lastMessageId = message.MessageId;
 
 			if (!hasAllRatings)

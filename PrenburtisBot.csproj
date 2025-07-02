@@ -13,10 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
-    <PackageReference Include="TelegramBotBase" Version="6.5.1" />
-    <PackageReference Include="WTelegramClient" Version="4.2.4" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.6" />
+    <PackageReference Include="TelegramBotBase" Version="7.0.0" />
+    <PackageReference Include="WTelegramClient" Version="4.3.5" />
   </ItemGroup>
 
 </Project>

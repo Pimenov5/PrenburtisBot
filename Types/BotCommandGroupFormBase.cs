@@ -70,8 +70,8 @@ namespace PrenburtisBot.Types
 
 			if (!string.IsNullOrEmpty(textMessage.Text))
 			{
-				await this.Client.TelegramClient.SendTextMessageAsync(this.Device.DeviceId, textMessage.Text, message.Message.Chat.IsForum ?? false ? message.Message.MessageThreadId : null,
-					textMessage.ParseMode, replyToMessageId: textMessage.ReplyToMessageId);
+				await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, textMessage.ReplyToMessageId, 
+					messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
 			}
 
 			if (textMessage.NavigateTo.Form is not null)
