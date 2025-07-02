@@ -70,8 +70,14 @@ namespace PrenburtisBot.Types
 
 			if (!string.IsNullOrEmpty(textMessage.Text))
 			{
-				await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, textMessage.ReplyToMessageId, 
-					messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
+				bool mustSendError = bool.TryParse(Environment.GetEnvironmentVariable("SEND_ERROR_MESSAGE_IN_GROUPS") ?? bool.TrueString, out bool boolValue) && boolValue;
+				if (textMessage.Kind != TextMessageKind.Error || mustSendError)
+				{
+					await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, textMessage.ReplyToMessageId,
+						messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
+				}
+				else
+					Console.Error.WriteLine(textMessage.Text);
 			}
 
 			if (textMessage.NavigateTo.Form is not null)
