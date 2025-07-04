@@ -40,10 +40,7 @@ namespace PrenburtisBot.Forms
 
 				foreach (Player item in players)
 					if (player != item && player.FirstName.Equals(item.FirstName))
-					{
-						result.Add($"{player} {(player.Username is null ? player.UserId.ToString() : '@' + player.Username)}", player);
-						break;
-					}
+						throw new ArgumentException($"Пользователи с одинаковыми именами: {player} и {item}", nameof(players));
 
 				result.Add(player.ToString(), player);
 			}
@@ -198,7 +195,7 @@ namespace PrenburtisBot.Forms
 
 				if (this.Device.LastMessage.ReplyToMessage is Message repliedMessage && repliedMessage.Text is string messageText)
 				{
-					if (s_players.TryGetValue(messageText, out Player? player))
+					if (s_players.Keys.Where((string key) => key.Contains(messageText)).ToList() is List<string> keys && keys.Count == 1 && s_players[keys[0]] is Player player)
 						_votes[player] = rating;
 					else
 						await this.Device.Send($"\"{messageText}\" не является именем игрока");
