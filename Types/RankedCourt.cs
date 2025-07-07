@@ -2,7 +2,7 @@
 {
 	internal class RankedCourt(long userId, List<Team> teams, uint teamMaxPlayerCount) : Court(userId, teams, teamMaxPlayerCount)
 	{
-		private bool _mustSort = true;
+		private bool _mustSortByRank = true, _isLastPlayers = false;
 		private Gender? _genderMinority;
 		private delegate IComparable GetComparableInterface(Team team);
 
@@ -23,76 +23,68 @@
 
 			List<Team> teams = base.GetTeams(player);
 
-			void SortAndRemoveTeams(GetComparableInterface func)
+			void SortAndRemoveTeams(GetComparableInterface func, bool ascendingSortOrder = true)
 			{
 				if (teams.Count <= 1)
 					return;
 
-				teams.Sort((Team x, Team b) => func(x).CompareTo(func(b)));
+				teams.Sort((Team x, Team y) => func(x).CompareTo(func(y)) * (ascendingSortOrder ? 1 : -1));
 				teams.RemoveAll((Team team) => !func(team).Equals(func(teams.First())));
 			}
 
 			SortAndRemoveTeams((Team team) => team.PlayerCount);
-			if (_mustSort)
-				SortAndRemoveTeams((Team team) => team.GetRankCount(player.Rank));
+			if (_genderMinority is Gender genderMinority && player.Gender == genderMinority)
+				SortAndRemoveTeams((Team team) => team.GetGenderCount(player.Gender));
+
+			if (_mustSortByRank)
+				SortAndRemoveTeams((Team team) => team.GetRankCount(player.Rank), !_isLastPlayers);
 			else
-			{
-				if (_genderMinority is Gender genderMinority && player.Gender == genderMinority)
-					SortAndRemoveTeams((Team team) => team.GetGenderCount(player.Gender));
-				SortAndRemoveTeams((Team team) => team.RatingSum);
-			}
+				SortAndRemoveTeams((Team team) => team.RatingSum, !_isLastPlayers);
 
 			return teams;
 		}
 
 		public override uint?[] AddPlayers(IEnumerable<Player> collection)
 		{
-			List<Player> players = new(collection);
-			players.Sort((Player x, Player y) => y.Rating.CompareTo(x.Rating));
-			List<uint?> result = new (players.Count);
-
 			Random random = new();
+			int digits = int.TryParse(Environment.GetEnvironmentVariable("ROUND_RATING_TO_DIGITS"), out digits) ? digits : 2;
 
-			bool isEmpty = true;
+			List<Player> players = [..collection];
+			players.Sort((Player x, Player y) => Math.Round(y.Rating, digits) == Math.Round(x.Rating, digits) ? random.Next(-1, 1) : y.Rating.CompareTo(x.Rating));
+			List<uint?> result = new(players.Count);
+
+			_mustSortByRank = false;
 			foreach (Team team in this.Teams)
 				if (team.PlayerCount != 0)
 				{
-					isEmpty = false;
+					_mustSortByRank = true;
 					break;
 				}
 
-			if (isEmpty)
+			if (_mustSortByRank)
+			{
+				foreach (Player player in players)
+					result.Add(this.AddPlayer(player, random));
+			}
+			else
 			{
 				int femaleCount = players.Count((Player player) => player.Gender == Gender.Female);
 				int maleCount = players.Count - femaleCount;
 				_genderMinority = maleCount == femaleCount ? null : maleCount > femaleCount ? Gender.Female : Gender.Male;
 
-				_mustSort = false;
-				try
+				while (players.Count > 0)
 				{
-					while (players.Count > 0)
-					{
-						int count = this.TeamCount < players.Count ? this.TeamCount : players.Count;
-						List<Player> range = players.GetRange(0, count);
-						foreach (Player player in range)
-							result.Add(this.AddPlayer(player, random));
+					int count = this.TeamCount < players.Count ? this.TeamCount : players.Count;
+					List<Player> range = players.GetRange(0, count);
+					_isLastPlayers = count < this.TeamCount;
+					foreach (Player player in range)
+						result.Add(this.AddPlayer(player, random));
 
-						players.RemoveRange(0, count);
-					}
-				}
-				finally
-				{
-					_mustSort = true;
-					_genderMinority = null;
+					players.RemoveRange(0, count);
 				}
 			}
-			else
-			{
-				foreach (Player player in players)
-					result.Add(this.AddPlayer(player, random));
-			}
 
-			return result.ToArray();
+			return [..result];
         }
 	}
 }
