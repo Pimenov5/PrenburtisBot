@@ -42,7 +42,7 @@ namespace PrenburtisBot.Forms
 				string teamName = team.FormatName();
 				string value = $"{(string.IsNullOrEmpty(teamName) ? "Команда " : string.Empty)}#{++i}{teamName} ({team.PlayerCount}{(rating is null ? string.Empty : $" = {Math.Round((double)rating, 1)}")}): ";
 				if (isGroup is bool boolValue && !boolValue && team.Contains(userId))
-					value = (string.IsNullOrEmpty(teamName) ? "Ваша" : "Вы в" + ' ' +  value).ToUpper();
+					value = ((string.IsNullOrEmpty(teamName) ? "Ваша " : "Вы в ") + value).ToUpper();
 
 				stringBuilder.Append(value);
 				stringBuilder.AppendJoin(", ", team.Players);
