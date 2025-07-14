@@ -107,6 +107,27 @@ namespace PrenburtisBot.Forms
 
 					if (idsToInsert.Count > 0)
 					{
+						List<Player>? usersToInsert = null;
+						foreach (Team team in court.Teams)
+							foreach (Player player in team.Players)
+							{
+								if (idsToInsert.Contains(player.UserId) && !Users.GetPlayers().Contains(player))
+								{
+									usersToInsert ??= [];
+									usersToInsert.Add(player);
+								};
+							}
+
+						if (usersToInsert is not null)
+						{
+							string commandText = new StringBuilder("INSERT INTO users (telegram_id, first_name, comment) VALUES ").AppendJoin(',',
+								usersToInsert.ConvertAll((Player player) => $"({player.UserId}, \"{player.FirstName}\", \"{userId} {DateTime.Now}\")")).ToString();
+							using SqliteCommand insertUsers = new(commandText, s_connection, transaction);
+							using SqliteDataReader usersReader = insertUsers.ExecuteReader();
+							if (usersReader.RecordsAffected != usersToInsert.Count)
+								throw new Exception("Не удалось выполнить: " + insertUsers.CommandText);
+						}
+
 						StringBuilder stringBuilder = new StringBuilder("INSERT INTO attendance_users (attendance_id, telegram_id) VALUES ").AppendJoin(',', idsToInsert.ConvertAll((long id) => $"({attendanceId},{id})"));
 						using SqliteCommand insertCommand = new(stringBuilder.ToString(), s_connection, transaction);
 						using SqliteDataReader insertReader = insertCommand.ExecuteReader();
