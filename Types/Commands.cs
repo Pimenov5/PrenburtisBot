@@ -54,7 +54,7 @@ namespace PrenburtisBot.Types
 			{
 				if (long.TryParse(value, out long chatId))
 					result = chatId;
-				else if (!string.IsNullOrEmpty(value))
+				else if (!string.IsNullOrEmpty(value) && value.StartsWith('@'))
 					result = value;
 				else
 					result = null;
@@ -63,7 +63,7 @@ namespace PrenburtisBot.Types
 			}
 
 			if (!TryParseChatId(attribute.ChatId, out ChatId? result))
-				if (Environment.GetEnvironmentVariable((type.Name + "_CHAT_ID").ToUpper()) is string value)
+				if (attribute.ChatId.EndsWith("_CHAT_ID") && Environment.GetEnvironmentVariable(attribute.ChatId) is string value)
 					TryParseChatId(value, out result);
 
 			return result ?? throw new NullReferenceException();

@@ -5,7 +5,7 @@ using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Forms
 {
-	[BotCommandChat("Авторизация пользователя", null)]
+	[BotCommandChat("Авторизация пользователя", "BOT_OWNER_CHAT_ID")]
 	internal class Login : FormBase, IDisposable, IBeforeBotStartAsyncExecutable
 	{
 		private static WTelegram.Client? _staticClient = null;
