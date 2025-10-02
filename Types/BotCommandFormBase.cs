@@ -20,10 +20,7 @@ namespace PrenburtisBot.Types
 
 		public override async Task Render(MessageResult message)
 		{
-			List<string> botCommandParameters = message.BotCommandParameters.Count > 0 ? message.BotCommandParameters : (!string.IsNullOrEmpty(message.BotCommand)
-				&& message.Command.Contains(message.BotCommand) ? message.Command.Replace(message.BotCommand, string.Empty) : message.Command).Split(' ').ToList();
-			botCommandParameters.RemoveAll((string value) => string.IsNullOrEmpty(value));
-			string[] args = botCommandParameters.ToArray();
+			string[] args = this.GetBotCommandParameters(message);
 
 			if (this.Device.IsGroup) {
 				string botUsername = '@' + (await this.API.GetMe()).Username;
