@@ -15,9 +15,20 @@ namespace PrenburtisBot.Forms
         public const byte PLAYER_JOINED_BYTE = 48;
         public async Task<TextMessage> RenderAsync(MessageResult message)
         {
-            string question = $"Перекличка на волейбол ЗАВТРА ({DateTime.Today.AddDays(1).ToString("dddd", CultureInfo.GetCultureInfo("ru-RU"))})";
-            if (message.BotCommandParameters is List<string> commandParameters && commandParameters.Count > 0 && TimeOnly.TryParse(commandParameters[0], out TimeOnly timeOnly))
-                question += " в " + commandParameters[0];
+            string[] args = this.GetBotCommandParameters(message);
+            if (args.Length > 2)
+                throw new ArgumentException($"Невалидное количество аргументов команды: {args.Length}", nameof(message));
+
+            double? dayCount = null;
+            string? time = null;
+            foreach (string arg in args)
+                if (double.TryParse(arg, out double doubleValue))
+                    dayCount ??= doubleValue;
+                else if (TimeOnly.TryParse(arg, out TimeOnly timeOnly))
+                    time ??= arg;
+
+            string question = $"Перекличка на волейбол {(dayCount ?? 1) switch { 0 => "СЕГОДНЯ", 1 => "ЗАВТРА", _ => throw new ArgumentException($"{dayCount} не является валидным количеством дней") }}"
+                + $" ({DateTime.Today.AddDays(dayCount ?? 1).ToString("dddd", CultureInfo.GetCultureInfo("ru-RU"))}){(string.IsNullOrEmpty(time) ? string.Empty : $" в {time}")}";
 
             int messageId = default;
             if (Session.Get(typeof(SendPoll), this.Device.DeviceId.ToString()) is string pinnedMessageId && int.TryParse(pinnedMessageId, out messageId))
