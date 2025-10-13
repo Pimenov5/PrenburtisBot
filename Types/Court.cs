@@ -157,7 +157,7 @@
 				this.AddPlayers(players);
 		}
 
-		public bool Shuffle()
+		public virtual bool Shuffle()
 		{
 			List<Player> players = [];
 			foreach (Team team in this.Teams)
