@@ -1,5 +1,29 @@
 ﻿namespace PrenburtisBot.Types
 {
+	public struct Settings
+	{
+		private double _teamsRatingsSumMaxDifference;
+
+		public const bool MUST_SORT_TEAMS_BY_RATING_SUM = true;
+		public bool MustSortTeamsByRatingSum;
+
+		public const double TEAMS_RATING_SUM_MAX_DIFFERENCE = 3.0;
+		public double TeamsRatingSumMaxDifference
+		{
+			readonly get => _teamsRatingsSumMaxDifference; 
+			set => _teamsRatingsSumMaxDifference = value >= 0 ? value : throw new ArgumentOutOfRangeException(nameof(value), value, "Макс. разница в рейтинге не может быть отрицательной");
+		} 
+
+		public Settings(bool? mustSortTeamsByRatingSum = null, double? teamsRatingSumMaxDifference = null)
+		{
+			this.MustSortTeamsByRatingSum = mustSortTeamsByRatingSum
+				?? (Environment.GetEnvironmentVariable("SORT_TEAMS_BY_RATING_SUN") is string strSortByRatingSum && bool.TryParse(strSortByRatingSum, out bool boolSortByRatingSum) && boolSortByRatingSum || MUST_SORT_TEAMS_BY_RATING_SUM);
+
+			this.TeamsRatingSumMaxDifference = teamsRatingSumMaxDifference ?? (Environment.GetEnvironmentVariable("TEAMS_RATING_SUM_MAX_DIFFERENCE") is string strMaxDifference 
+				&& double.TryParse(strMaxDifference, out double maxDifference) ? maxDifference : TEAMS_RATING_SUM_MAX_DIFFERENCE);
+		}
+	}
+
 	internal class RankedCourt(long userId, List<Team> teams, uint teamMaxPlayerCount) : Court(userId, teams, teamMaxPlayerCount)
 	{
 		private bool _mustSortByRank = true, _isLastPlayers = false;
@@ -38,7 +62,7 @@
 
 			if (_mustSortByRank)
 				SortAndRemoveTeams((Team team) => team.GetRankCount(player.Rank), !_isLastPlayers);
-			else
+			else if (this.Settings.MustSortTeamsByRatingSum)
 				SortAndRemoveTeams((Team team) => team.RatingSum, !_isLastPlayers);
 
 			return teams;
@@ -86,5 +110,37 @@
 
 			return [..result];
         }
+
+		public override bool Shuffle()
+		{
+			bool result = base.Shuffle();
+
+			for (int i = 0; i < Math.Pow(this.TeamMaxPlayerCount, this.TeamCount); i++)
+			{
+				if (i == 0 && !result)
+					break;
+
+				foreach (Team team1 in this.Teams)
+				{
+					if (!result)
+						break;
+
+					foreach (Team team2 in this.Teams)
+						if (team1.PlayerCount == team2.PlayerCount && Math.Abs(team1.RatingSum - team2.RatingSum) > (this.Settings.TeamsRatingSumMaxDifference >= 0 ? this.Settings.TeamsRatingSumMaxDifference
+								: throw new InvalidOperationException($": {this.Settings.TeamsRatingSumMaxDifference}")))
+						{
+							result = false;
+							break;
+						}
+				}
+
+				if (result)
+					break;
+			}
+
+			return result;
+		}
+
+		public Settings Settings = new(null, null);
 	}
 }
