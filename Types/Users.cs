@@ -26,8 +26,9 @@ namespace PrenburtisBot.Types
 				char genderChar = reader.GetChar(3);
 				Gender gender = genderChar switch { 'M' => Gender.Male, 'F' => Gender.Female,
 					_ => throw new InvalidCastException($"\"{genderChar}\" не является полом игрока {firstName} ({userId})") };
+				Skills skills = new(reader.IsDBNull(6) ? 1.0 : reader.GetDouble(6), reader.IsDBNull(7) ? 1.0 : reader.GetDouble(7), reader.IsDBNull(8) ? 1.0 : reader.GetDouble(8));
 
-				_users.Add(new(userId, firstName, reader.IsDBNull(2) ? default : reader.GetDouble(2), gender, reader.GetBoolean(4), reader.GetBoolean(5)));
+				_users.Add(new(userId, firstName, reader.IsDBNull(2) ? default : reader.GetDouble(2), gender, skills, reader.GetBoolean(4), reader.GetBoolean(5)));
 			}
 
 			return _users.Count - count;
@@ -36,7 +37,7 @@ namespace PrenburtisBot.Types
 		public static IReadOnlyCollection<Player> GetPlayers() => _users;
 		public static Player GetPlayer(long userId, string firstName, string? username = null)
 		{
-			User equalValue = new(userId, firstName, default, default, default, default);
+			User equalValue = new(userId, firstName, default, default, default, default, default);
 			if (!_users.TryGetValue(equalValue, out User? result))
 				return equalValue;
 
