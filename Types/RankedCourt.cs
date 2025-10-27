@@ -165,6 +165,33 @@
 			return [..result];
         }
 
+		public override bool Shuffle()
+		{
+			bool result = false;
+
+			for (int i = 0; i < Math.Pow(this.TeamMaxPlayerCount, this.TeamCount); i++)
+			{
+				result = base.Shuffle();
+				foreach (Team team1 in this.Teams)
+				{
+					if (!result)
+						break;
+
+					foreach (Team team2 in this.Teams)
+						if (team1.PlayerCount == team2.PlayerCount && Math.Abs(team1.RatingSum - team2.RatingSum) > this.Settings.TeamsRatingSumMaxDifference)
+						{
+							result = false;
+							break;
+						}
+				}
+
+				if (result)
+					break;
+			}
+
+			return result;
+		}
+
 		public Settings Settings = new(null, null);
 	}
 }
