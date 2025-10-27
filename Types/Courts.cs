@@ -12,6 +12,7 @@
 
 		public static bool Contains(int index) => 0 <= index && index < _courts.Count;
 		public static void Replace(int index, Court court) => _courts[index] = court;
+		public static void RemoveAt(int index) => _courts.RemoveAt(index);
 
 		public static Court GetById(string? id) => GetById(ref id, null);
 		public static Court GetById(ref string? id, long? userId)
