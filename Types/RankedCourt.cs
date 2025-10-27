@@ -113,21 +113,18 @@
 
 		public override bool Shuffle()
 		{
-			bool result = base.Shuffle();
+			bool result = false;
 
 			for (int i = 0; i < Math.Pow(this.TeamMaxPlayerCount, this.TeamCount); i++)
 			{
-				if (i == 0 && !result)
-					break;
-
+				result = base.Shuffle();
 				foreach (Team team1 in this.Teams)
 				{
 					if (!result)
 						break;
 
 					foreach (Team team2 in this.Teams)
-						if (team1.PlayerCount == team2.PlayerCount && Math.Abs(team1.RatingSum - team2.RatingSum) > (this.Settings.TeamsRatingSumMaxDifference >= 0 ? this.Settings.TeamsRatingSumMaxDifference
-								: throw new InvalidOperationException($": {this.Settings.TeamsRatingSumMaxDifference}")))
+						if (team1.PlayerCount == team2.PlayerCount && Math.Abs(team1.RatingSum - team2.RatingSum) > this.Settings.TeamsRatingSumMaxDifference)
 						{
 							result = false;
 							break;
