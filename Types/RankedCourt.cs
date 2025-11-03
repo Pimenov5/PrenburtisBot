@@ -1,4 +1,7 @@
-﻿namespace PrenburtisBot.Types
+﻿using System.Text;
+using System.Reflection;
+
+namespace PrenburtisBot.Types
 {
 	public struct Settings
 	{
@@ -33,6 +36,22 @@
 			
 			this.TeamsRatingSumMaxDifference = teamsRatingSumMaxDifference ?? (Environment.GetEnvironmentVariable("TEAMS_RATING_SUM_MAX_DIFFERENCE") is string strMaxDifference
 				&& double.TryParse(strMaxDifference, out double maxDifference) ? maxDifference : TEAMS_RATING_SUM_MAX_DIFFERENCE);
+		}
+
+		public override readonly string ToString()
+		{
+			StringBuilder stringBuilder = new();
+			Settings settings = this;
+
+			List<FieldInfo> fields = [..this.GetType().GetFields().Where((FieldInfo fieldInfo) => !fieldInfo.Name.Equals(fieldInfo.Name.ToUpper(), StringComparison.Ordinal))];
+			stringBuilder.AppendJoin(Environment.NewLine, fields.ConvertAll<string>((FieldInfo fieldInfo) => $"{fieldInfo.Name} = {fieldInfo.GetValue(settings)}"));
+
+			List<PropertyInfo> properties = [..this.GetType().GetProperties()];
+			if (properties.Count > 0) 
+				stringBuilder.Append(Environment.NewLine);
+			stringBuilder.AppendJoin(Environment.NewLine, properties.ConvertAll<string>((PropertyInfo propertyInfo) => $"{propertyInfo.Name} = {propertyInfo.GetValue(settings)}"));
+
+			return stringBuilder.ToString();
 		}
 	}
 
