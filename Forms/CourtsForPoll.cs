@@ -55,7 +55,7 @@ namespace PrenburtisBot.Forms
 			}
 		}
 
-		protected override TextMessage GetTextMessage(long userId, IReadOnlyCollection<Player> players, MessageResult message, params string[] args)
+		protected override IReadOnlyList<TextMessage> GetTextMessages(long userId, IReadOnlyCollection<Player> players, MessageResult message, params string[] args)
 		{
 			Court newCourt;
 			string? value = Environment.GetEnvironmentVariable("TEAMS_NAMES_WRITE_SESSION");
@@ -85,14 +85,14 @@ namespace PrenburtisBot.Forms
 
 			int i = 0;
 			List<SimpleCourt> courts = new(3);
-			List<InputPollOption> options = new(3);
 			int? messageThreadId = message.Message.Chat.IsForum ? message.Message.MessageThreadId : null;
 
-			while (courts.Count < 3)
+			List<TextMessage> result = [];
+			while (courts.Count < 3 && i < Math.Pow(court.TeamMaxPlayerCount, court.TeamCount))
 			{
 				court.Settings = i++ switch { 0 => new(true, false), 1 => new(true, true), _ => new(false, true, true, 2) };
 				if (!court.Shuffle())
-					throw new InvalidOperationException("Не удалось перемешать игроков на площадке");
+					Console.Error.WriteLine("Не удалось перемешать игроков на площадке:" + Environment.NewLine + court.Settings + Environment.NewLine);
 
 				SimpleCourt? simpleCourt = new(court);
 				foreach (SimpleCourt item in courts)
@@ -107,15 +107,15 @@ namespace PrenburtisBot.Forms
 				else 
 					courts.Add(simpleCourt);
 
-				Task messageTask = this.API.SendMessage(this.Device.DeviceId, CourtPlayers.ToString(court, userId, this.Device.IsGroup), ParseMode.Markdown, messageThreadId: messageThreadId);
-				options.Add($"Вариант #{options.Count + 1}");
-				messageTask.Wait();
+				result.Add(new(CourtPlayers.ToString(court, userId, this.Device.IsGroup)) { ParseMode = ParseMode.Markdown });
 			}
 
+			List<InputPollOption> options = new(3);
+			for (i = 1; i <= courts.Count; options.Add($"Вариант #{i++}")) ;
 			Task pollTask = this.API.SendPoll(this.Device.DeviceId, "Каким составом команд играем сегодня?", options, allowsMultipleAnswers: true, messageThreadId: messageThreadId);
 			pollTask.Wait();
 
-			return new TextMessage(string.Empty).NavigateToStart(Start.SET_QUIET);
+			return result;
 		}
 	}
 }
