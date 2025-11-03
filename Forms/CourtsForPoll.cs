@@ -108,7 +108,9 @@ namespace PrenburtisBot.Forms
 
 				result.Add(new(CourtPlayers.ToString(court, userId, this.Device.IsGroup)) { ParseMode = ParseMode.Markdown });
 			}
-			
+
+			if (result.Count > 0)
+				result[^1].NavigateToStart(Start.SET_QUIET);
 			return result;
 		}
 
