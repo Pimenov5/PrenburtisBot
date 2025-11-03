@@ -9,7 +9,7 @@ namespace PrenburtisBot.Types
 		public static WTelegram.Client? TelegramClient = null;
 
 		protected abstract TextMessage GetTextMessage(long userId, IReadOnlyCollection<Player> players, params string[] args);
-		protected virtual IReadOnlyList<TextMessage> GetTextMessages(long userId, IReadOnlyCollection<Player> players, MessageResult message, params string[] args) => [GetTextMessage(userId, players, args)];
+		protected virtual IReadOnlyList<TextMessage> GetTextMessages(long userId, IReadOnlyCollection<Player> players, params string[] args) => [GetTextMessage(userId, players, args)];
 
 		public async Task<IReadOnlyList<TextMessage>> RenderAsync(MessageResult message)
 		{
@@ -29,7 +29,7 @@ namespace PrenburtisBot.Types
 			if (args.Length > 0 && args[^1].StartsWith('@') && (await this.API.GetMe()).Username is string botUsername && args[^1].Equals('@' + botUsername))
 				Array.Resize(ref args, args.Length - 1);
 
-			IReadOnlyList<TextMessage> textMessages = this.GetTextMessages(userId, players, message, args);
+			IReadOnlyList<TextMessage> textMessages = this.GetTextMessages(userId, players, args);
 			foreach (TextMessage textMessage in textMessages)
 				textMessage.ReplyToMessageId ??= repliedMessage.MessageId;
 			return textMessages;

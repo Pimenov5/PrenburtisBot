@@ -55,7 +55,7 @@ namespace PrenburtisBot.Forms
 			}
 		}
 
-		protected override IReadOnlyList<TextMessage> GetTextMessages(long userId, IReadOnlyCollection<Player> players, MessageResult message, params string[] args)
+		protected override IReadOnlyList<TextMessage> GetTextMessages(long userId, IReadOnlyCollection<Player> players, params string[] args)
 		{
 			Court newCourt;
 			string? value = Environment.GetEnvironmentVariable("TEAMS_NAMES_WRITE_SESSION");
@@ -85,9 +85,8 @@ namespace PrenburtisBot.Forms
 
 			int i = 0;
 			List<SimpleCourt> courts = new(3);
-			int? messageThreadId = message.Message.Chat.IsForum ? message.Message.MessageThreadId : null;
-
 			List<TextMessage> result = [];
+
 			while (courts.Count < 3 && i < Math.Pow(court.TeamMaxPlayerCount, court.TeamCount))
 			{
 				court.Settings = i++ switch { 0 => new(true, false), 1 => new(true, true), _ => new(false, true, true, 2) };
@@ -109,13 +108,15 @@ namespace PrenburtisBot.Forms
 
 				result.Add(new(CourtPlayers.ToString(court, userId, this.Device.IsGroup)) { ParseMode = ParseMode.Markdown });
 			}
-
-			List<InputPollOption> options = new(3);
-			for (i = 1; i <= courts.Count; options.Add($"Вариант #{i++}")) ;
-			Task pollTask = this.API.SendPoll(this.Device.DeviceId, "Каким составом команд играем сегодня?", options, allowsMultipleAnswers: true, messageThreadId: messageThreadId);
-			pollTask.Wait();
-
+			
 			return result;
+		}
+
+		protected override async Task AfterMessagesSentAsync(IReadOnlyCollection<Message> messages, int? messageThreadId)
+		{
+			List<InputPollOption> options = new(3);
+			for (int i = 1; i <= messages.Count; options.Add($"Вариант #{i++}")) ;
+			await this.API.SendPoll(this.Device.DeviceId, "Каким составом команд играем сегодня?", options, allowsMultipleAnswers: true, messageThreadId: messageThreadId);
 		}
 	}
 }

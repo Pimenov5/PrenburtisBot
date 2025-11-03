@@ -15,6 +15,8 @@ namespace PrenburtisBot.Types
 			return Task.CompletedTask;
 		};
 
+		protected virtual async Task AfterMessagesSentAsync(IReadOnlyCollection<Telegram.Bot.Types.Message> messages, int? messageThreadId) { }
+
 		public override async Task Render(MessageResult message)
 		{
 			Type[] types;
@@ -69,18 +71,23 @@ namespace PrenburtisBot.Types
 			if (Environment.GetEnvironmentVariable("DELETE_APPEAL_TO_BOT_IN_GROUPS") is string value && bool.TryParse(value, out bool mustDelete) && mustDelete)
 				await message.DeleteMessage();
 
+			int? messageThreadId = message.Message.Chat.IsForum ? message.Message.MessageThreadId : null;
+			List<Telegram.Bot.Types.Message> newMessages = new(textMessages.Count());
 			foreach (TextMessage textMessage in textMessages)
 				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
 					bool mustSendError = bool.TryParse(Environment.GetEnvironmentVariable("SEND_ERROR_MESSAGE_IN_GROUPS") ?? bool.TrueString, out bool boolValue) && boolValue;
 					if (textMessage.Kind != TextMessageKind.Error || mustSendError)
 					{
-						await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, textMessage.ReplyToMessageId,
-							messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
+						Telegram.Bot.Types.Message newMessage = await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, textMessage.ReplyToMessageId,
+							messageThreadId: messageThreadId);
+						newMessages.Add(newMessage);
 					}
 					else
 						Console.Error.WriteLine(textMessage.Text);
 				}
+
+			await AfterMessagesSentAsync(newMessages, messageThreadId);
 
 			FormWithArgs? formWithArgs = null;
 			foreach (TextMessage textMessage in textMessages) 
