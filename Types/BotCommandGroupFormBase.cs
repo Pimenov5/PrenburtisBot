@@ -15,6 +15,8 @@ namespace PrenburtisBot.Types
 			return Task.CompletedTask;
 		};
 
+		protected virtual async Task AfterMessagesSentAsync(IReadOnlyCollection<Telegram.Bot.Types.Message> messages, int? messageThreadId) { }
+
 		public override async Task Render(MessageResult message)
 		{
 			Type[] types;
@@ -40,48 +42,62 @@ namespace PrenburtisBot.Types
 			if (methodInfo is null)
 				return;
 
-			TextMessage? textMessage;
+			IEnumerable<TextMessage>? textMessages;
 			try
 			{
 				object? result = methodInfo.Invoke(this, parameters);
 				if (result is Task task)
 					await task;
 
-				textMessage = result switch
+				textMessages = result switch
 				{
 					null => null,
-					string => new((string)result),
-					TextMessage => (TextMessage)result,
-					Task<string> => new(await (Task<string>)result),
-					Task<TextMessage> => await (Task<TextMessage>)result,
+					string => [new((string)result)],
+					TextMessage => [(TextMessage)result],
+					Task<string> => [new(await (Task<string>)result)],
+					Task<TextMessage> => [await (Task<TextMessage>)result],
+					Task<IReadOnlyList<TextMessage>> => await (Task<IReadOnlyList<TextMessage>>)result,
 					_ => throw new InvalidCastException($"Неизвестный тип результата: {result.GetType().Name}")
 				};
 			}
 			catch (Exception e)
 			{
-				textMessage = new TextMessage(e.Message).SetErrorKind().NavigateToStart();
+				textMessages = [new TextMessage(e.Message).SetErrorKind().NavigateToStart()];
 			}
 
-			if (textMessage is null)
+			if (textMessages is null)
 				return;
 
 			if (Environment.GetEnvironmentVariable("DELETE_APPEAL_TO_BOT_IN_GROUPS") is string value && bool.TryParse(value, out bool mustDelete) && mustDelete)
 				await message.DeleteMessage();
 
-			if (!string.IsNullOrEmpty(textMessage.Text))
-			{
-				bool mustSendError = bool.TryParse(Environment.GetEnvironmentVariable("SEND_ERROR_MESSAGE_IN_GROUPS") ?? bool.TrueString, out bool boolValue) && boolValue;
-				if (textMessage.Kind != TextMessageKind.Error || mustSendError)
+			int? messageThreadId = message.Message.Chat.IsForum ? message.Message.MessageThreadId : null;
+			List<Telegram.Bot.Types.Message> newMessages = new(textMessages.Count());
+			foreach (TextMessage textMessage in textMessages)
+				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
-					await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, textMessage.ReplyToMessageId,
-						messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
+					bool mustSendError = bool.TryParse(Environment.GetEnvironmentVariable("SEND_ERROR_MESSAGE_IN_GROUPS") ?? bool.TrueString, out bool boolValue) && boolValue;
+					if (textMessage.Kind != TextMessageKind.Error || mustSendError)
+					{
+						Telegram.Bot.Types.Message newMessage = await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, textMessage.ReplyToMessageId,
+							messageThreadId: messageThreadId);
+						newMessages.Add(newMessage);
+					}
+					else
+						Console.Error.WriteLine(textMessage.Text);
 				}
-				else
-					Console.Error.WriteLine(textMessage.Text);
+
+			await AfterMessagesSentAsync(newMessages, messageThreadId);
+
+			FormWithArgs? formWithArgs = null;
+			foreach (TextMessage textMessage in textMessages) 
+			{
+				if (textMessage.NavigateTo.Form is not null)
+					formWithArgs = formWithArgs is null ? textMessage.NavigateTo : throw new InvalidOperationException("Невозможно перейти на несколько форм одновременно");
 			}
 
-			if (textMessage.NavigateTo.Form is not null)
-				await this.Device.ActiveForm.NavigateTo(textMessage.NavigateTo.Form, textMessage.NavigateTo.Args);
+			if (formWithArgs is not null)
+				await this.Device.ActiveForm.NavigateTo(formWithArgs?.Form, formWithArgs?.Args);
 		}
 	}
 }
