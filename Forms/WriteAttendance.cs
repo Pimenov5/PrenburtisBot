@@ -154,12 +154,23 @@ namespace PrenburtisBot.Forms
 
 						if (usersToInsert is not null)
 						{
-							string commandText = new StringBuilder("INSERT INTO users (telegram_id, first_name, comment) VALUES ").AppendJoin(',',
-								usersToInsert.ConvertAll((Player player) => $"({player.UserId}, \"{player.FirstName}\", \"{userId} {DateTime.Now}\")")).ToString();
-							using SqliteCommand insertUsers = new(commandText, s_connection, transaction);
-							using SqliteDataReader usersReader = insertUsers.ExecuteReader();
-							if (usersReader.RecordsAffected != usersToInsert.Count)
-								throw new Exception("Не удалось выполнить: " + insertUsers.CommandText);
+							using SqliteCommand selectUsersCommand = new("SELECT users.telegram_id FROM users WHERE users.telegram_id IN ("
+								+ new StringBuilder().AppendJoin(',', usersToInsert.ConvertAll<long>((Player player) => player.UserId)) + ')', s_connection, transaction);
+							using SqliteDataReader selectUsersReader = selectUsersCommand.ExecuteReader();
+							List<long> idsToRemove = new(usersToInsert.Count);
+							while (selectUsersReader.HasRows && selectUsersReader.Read())
+								idsToRemove.Add(selectUsersReader.GetInt64(0));
+
+							usersToInsert.RemoveAll((Player player) => idsToRemove.Contains(player.UserId));
+							if (usersToInsert.Count > 0)
+							{
+								string commandText = new StringBuilder("INSERT INTO users (telegram_id, first_name, comment) VALUES ").AppendJoin(',',
+									usersToInsert.ConvertAll((Player player) => $"({player.UserId}, \"{player.FirstName}\", \"{userId} {DateTime.Now}\")")).ToString();
+								using SqliteCommand insertUsers = new(commandText, s_connection, transaction);
+								using SqliteDataReader usersReader = insertUsers.ExecuteReader();
+								if (usersReader.RecordsAffected != usersToInsert.Count)
+									throw new Exception("Не удалось выполнить: " + insertUsers.CommandText);
+							}
 						}
 
 						StringBuilder stringBuilder = new StringBuilder("INSERT INTO attendance_users (attendance_id, telegram_id) VALUES ").AppendJoin(',', idsToInsert.ConvertAll((long id) => $"({attendanceId},{id})"));
