@@ -9,14 +9,27 @@ namespace PrenburtisBot.Types
 	internal abstract class BotCommandFormBase : FormBase
 	{
 		private object[] _args = [];
+		private bool _mustHideReplyKeyboard = false;
 
 		protected object[] InitArgs => _args;
 
-		public BotCommandFormBase() => this.Init += (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
+		public BotCommandFormBase()
 		{
-			_args = initArgs.Args;
-			return Task.CompletedTask;
-		};
+			this.Init += (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
+			{
+				_args = initArgs.Args;
+				return Task.CompletedTask;
+			};
+
+			this.Closed += async (object sender, EventArgs closedArgs) =>
+			{
+				if (_mustHideReplyKeyboard)
+				{
+					await this.Device.HideReplyKeyboard("...");
+					_mustHideReplyKeyboard = false;
+				}
+			};
+		}
 
 		public override async Task Render(MessageResult message)
 		{
@@ -127,9 +140,11 @@ namespace PrenburtisBot.Types
 			{
 				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
-					InlineKeyboardMarkup? inlineKeyboardMarkup = this.Device.IsGroup ? null : textMessage.Buttons;
-					await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, null, inlineKeyboardMarkup,
+					IReplyMarkup? replyMarkup = this.Device.IsGroup ? null : textMessage.ReplyMarkup;
+					await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, null, replyMarkup,
 						messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
+
+					_mustHideReplyKeyboard = replyMarkup is ReplyKeyboardMarkup;
 				}
 
 				if (textMessage.NavigateTo.Form is not null)

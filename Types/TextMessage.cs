@@ -1,4 +1,5 @@
 ﻿using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotBase.Form;
 using TelegramBotBase.Markdown;
 
@@ -18,7 +19,7 @@ namespace PrenburtisBot.Types
 
 		public string Text = text;
 		public TextMessageKind Kind = messageKind;
-		public ButtonForm? Buttons;
+		public IReplyMarkup? ReplyMarkup;
 		public ParseMode ParseMode;
 		public FormWithArgs NavigateTo;
 		public int? ReplyToMessageId;

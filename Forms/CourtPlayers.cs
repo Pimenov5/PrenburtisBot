@@ -1,6 +1,7 @@
 ﻿using PrenburtisBot.Attributes;
 using PrenburtisBot.Types;
 using System.Text;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Forms
@@ -72,7 +73,7 @@ namespace PrenburtisBot.Forms
 			if (!string.IsNullOrEmpty(messageIdToDelete) && int.TryParse(messageIdToDelete, out int messageId))
 				await this.Device.DeleteMessage(messageId);
 
-			return new TextMessage(text) { Buttons = buttonForm, ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
+			return new TextMessage(text) { ReplyMarkup = (InlineKeyboardMarkup)buttonForm, ParseMode = Telegram.Bot.Types.Enums.ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
 		}
 	}
 }
