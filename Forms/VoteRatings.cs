@@ -11,21 +11,10 @@ using TelegramBotBase.Args;
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Заполнить рейтинги игроков")]
-	internal class VoteRatings : BotCommandFormBase
+	internal class VoteRatings : SqliteBotCommandFormBase
 	{
-		private static SqliteConnection? s_connection;
 		private static List<Player>? s_sortedPlayers;
 		private static Dictionary<string, Player>? s_players;
-
-		private static void BuildConnection()
-		{
-			if (s_connection is not null)
-				return;
-
-			SqliteConnectionStringBuilder builder = new() { Mode = SqliteOpenMode.ReadWrite };
-			s_connection = new(builder.SetDataSource("PRENBURTIS_DATA_BASE").ConnectionString);
-			s_connection.Open();
-		}
 
 		private static Dictionary<string, Player> CreatePlayers(IReadOnlyCollection<Player> players)
 		{
@@ -59,7 +48,7 @@ namespace PrenburtisBot.Forms
 
 		private static int GetFormId()
 		{
-			using SqliteCommand command = new("SELECT max(id) FROM ratings_forms WHERE closed_timestamp is NULL", s_connection ?? throw new NullReferenceException());
+			using SqliteCommand command = new("SELECT max(id) FROM ratings_forms WHERE closed_timestamp is NULL", SqliteConnection);
 			using SqliteDataReader reader = command.ExecuteReader();
 			VoteRatings.CheckFieldCount(reader, 1);
 			if (reader.HasRows && reader.Read() && !reader.IsDBNull(0))
@@ -70,8 +59,7 @@ namespace PrenburtisBot.Forms
 
 		private static DateTime? GetUserFormTimestamp(int formId, long userId)
 		{
-			using SqliteCommand command = new($"SELECT timestamp FROM ratings_forms_users WHERE telegram_id = {userId} AND ratings_form_id = {formId}",
-				s_connection ?? throw new NullReferenceException());
+			using SqliteCommand command = new($"SELECT timestamp FROM ratings_forms_users WHERE telegram_id = {userId} AND ratings_form_id = {formId}", SqliteConnection);
 			using SqliteDataReader reader = command.ExecuteReader();
 			if (!(reader.HasRows && reader.Read()))
 				return null;
@@ -98,7 +86,7 @@ namespace PrenburtisBot.Forms
 			static long GetFormUserId(int formId, long userId, SqliteTransaction transaction)
 			{
 				using SqliteCommand command = new($"INSERT INTO ratings_forms_users (telegram_id, ratings_form_id) VALUES ({userId}, {formId}) RETURNING id",
-					s_connection ?? throw new NullReferenceException(), transaction);
+					SqliteConnection, transaction);
 				if (command.ExecuteScalar() is not object formUserId)
 					throw new Exception("Не удалось выполнить:" + Environment.NewLine + command.CommandText);
 				return (long)formUserId;
@@ -114,12 +102,12 @@ namespace PrenburtisBot.Forms
 			stringBuilder.Remove(stringBuilder.Length - VALUES_DELIMITER.Length, VALUES_DELIMITER.Length);
 
 			int count = default;
-			using SqliteTransaction transaction = (s_connection ?? throw new NullReferenceException()).BeginTransaction();
+			using SqliteTransaction transaction = SqliteConnection.BeginTransaction();
 			try
 			{
 				long formUserId = GetFormUserId(_formId ?? throw new NullReferenceException(), userId, transaction);
 
-				using SqliteCommand command = new(string.Format(stringBuilder.ToString(), formUserId), s_connection ?? throw new NullReferenceException(), transaction);
+				using SqliteCommand command = new(string.Format(stringBuilder.ToString(), formUserId), SqliteConnection, transaction);
 				using SqliteDataReader reader = command.ExecuteReader();
 				count = reader.RecordsAffected;
 
@@ -156,7 +144,6 @@ namespace PrenburtisBot.Forms
 				}
 			}
 
-			BuildConnection();
 			_formId ??= VoteRatings.GetFormId();
 			if (_votes.Count == 0 && VoteRatings.GetUserFormTimestamp(_formId ?? throw new NullReferenceException(), userId) is DateTime timestamp)
 				throw new Exception($"Вы уже отправили рейтинги игроков в {timestamp}");
