@@ -1,6 +1,7 @@
 ﻿using PrenburtisBot.Attributes;
 using PrenburtisBot.Types;
 using System.Text;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotBase.Args;
 using TelegramBotBase.Form;
 
@@ -72,7 +73,7 @@ namespace PrenburtisBot.Forms
 			buttonForm?.AddButtonRow(new ButtonBase("👀", new CallbackData(nameof(CourtPlayers), courtId).Serialize()),
 				new ButtonBase("❌", new CallbackData(nameof(LeaveCourt), courtId).Serialize()));
 
-			return new TextMessage(text) { Buttons = buttonForm }.NavigateToStart(Start.SET_QUIET);
+			return new TextMessage(text) { ReplyMarkup = (InlineKeyboardMarkup)buttonForm }.NavigateToStart(Start.SET_QUIET);
 		}
 	}
 }

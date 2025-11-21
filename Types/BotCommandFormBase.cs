@@ -127,8 +127,8 @@ namespace PrenburtisBot.Types
 			{
 				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
-					InlineKeyboardMarkup? inlineKeyboardMarkup = this.Device.IsGroup ? null : textMessage.Buttons;
-					await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, null, inlineKeyboardMarkup,
+					IReplyMarkup? replyMarkup = this.Device.IsGroup ? null : textMessage.ReplyMarkup;
+					await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, null, replyMarkup,
 						messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
 				}
 
