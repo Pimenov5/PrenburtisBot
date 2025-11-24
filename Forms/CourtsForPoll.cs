@@ -33,6 +33,8 @@ namespace PrenburtisBot.Forms
 
 			public bool Equals(SimpleCourt court)
 			{
+				if (base.Equals(court))
+					return true;
 				if (this.TeamCount != court.TeamCount)
 					return false;
 
