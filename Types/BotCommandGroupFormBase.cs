@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using PrenburtisBot.Forms;
+using System.Reflection;
 using Telegram.Bot;
 using TelegramBotBase.Base;
 using TelegramBotBase.Form;
@@ -8,6 +9,8 @@ namespace PrenburtisBot.Types
 	internal class BotCommandGroupFormBase : GroupForm
 	{
 		private object[]? _initArgs;
+
+		protected bool MustNavigateToStart = true;
 
 		public BotCommandGroupFormBase() => this.Init += (object sender, TelegramBotBase.Args.InitEventArgs initArgs) =>
 		{
@@ -96,6 +99,7 @@ namespace PrenburtisBot.Types
 					formWithArgs = formWithArgs is null ? textMessage.NavigateTo : throw new InvalidOperationException("Невозможно перейти на несколько форм одновременно");
 			}
 
+			formWithArgs ??= this.MustNavigateToStart ? new(new Start(), Start.SET_QUIET) : null;
 			if (formWithArgs is not null)
 				await this.Device.ActiveForm.NavigateTo(formWithArgs?.Form, formWithArgs?.Args);
 		}

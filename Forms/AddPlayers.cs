@@ -49,7 +49,7 @@ namespace PrenburtisBot.Forms
 			}
 
 			string text = CourtPlayers.ToString(court, userId, this.Device.IsGroup);
-			return new TextMessage(text) { ParseMode = ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET);
+			return new TextMessage(text) { ParseMode = ParseMode.Markdown };
 		}
 
 		protected virtual Court GetCourt(int playersCount, long userId, out int courtId)

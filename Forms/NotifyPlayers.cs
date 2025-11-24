@@ -15,7 +15,7 @@ namespace PrenburtisBot.Forms
 			stringBuilder.AppendLine(Environment.NewLine);
 			stringBuilder.AppendJoin(", ", players);	
 
-			return new TextMessage(stringBuilder.ToString()) { ParseMode = ParseMode.Markdown }.NavigateToStart(Start.SET_QUIET); 
+			return new TextMessage(stringBuilder.ToString()) { ParseMode = ParseMode.Markdown }; 
 		}
 	}
 }

@@ -48,7 +48,7 @@ namespace PrenburtisBot.Forms
 			if (WriteAttendance.Write(userId, players, attendance, dateTime) is int count)
 				Console.WriteLine($"Количество изменённых в посещаемости строк: {count}");
 
-			return new TextMessage(string.Empty).NavigateToStart(Start.SET_QUIET);
+			return new TextMessage(string.Empty);
 		}
 
 		public static int Write(long userId, IEnumerable<Player> players, Attendance attendance = Attendance.Insert, DateTime? dateTime = null)
