@@ -58,15 +58,7 @@ namespace PrenburtisBot.Forms
 		protected override IReadOnlyList<TextMessage> GetTextMessages(long userId, IReadOnlyCollection<Player> players, params string[] args)
 		{
 			Court newCourt;
-			string? value = Environment.GetEnvironmentVariable("TEAMS_NAMES_WRITE_SESSION");
-			try
-			{
-				newCourt = this.GetCourt(players.Count, userId, out int courtId);
-			}
-			finally
-			{
-				Environment.SetEnvironmentVariable("TEAMS_NAMES_WRITE_SESSION", value);
-			}
+			newCourt = this.GetCourt(players.Count, userId, out int courtId);
 
 			if (newCourt is not RankedCourt)
 			{
@@ -106,7 +98,7 @@ namespace PrenburtisBot.Forms
 				else 
 					courts.Add(simpleCourt);
 
-				result.Add(new(CourtPlayers.ToString(court, userId, this.Device.IsGroup)) { ParseMode = ParseMode.Markdown });
+				result.Add(new(CourtPlayers.ToString(court, userId, this.Device.IsGroup)) { ParseMode = ParseMode.Markdown, ReplyToMessageId = -1 });
 			}
 
 			if (result.Count > 0)
