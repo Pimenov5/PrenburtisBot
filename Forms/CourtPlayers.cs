@@ -9,8 +9,8 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Список игроков на площадке")]
 	internal class CourtPlayers : BotCommandFormBase
 	{
-		public static string ToString(ref string? courtId, long userId, bool? isGroup) => ToString(Courts.GetById(ref courtId, userId), userId, isGroup);
-		public static string ToString(Court court, long userId, bool? isGroup)
+		public static string ToString(ref string? courtId, long userId, bool? isGroup, bool isShort = false) => ToString(Courts.GetById(ref courtId, userId), userId, isGroup, isShort);
+		public static string ToString(Court court, long userId, bool? isGroup, bool isShort = false)
 		{
 			Team[] teams = court.Teams;
 			int count = 0, maxCount = 0;
@@ -28,7 +28,7 @@ namespace PrenburtisBot.Forms
 			else if (count == 0)
 				teams = [];
 
-			StringBuilder stringBuilder = new(count == 0 ? "Нет игроков на площадке"
+			StringBuilder stringBuilder = new(count == 0 ? "Нет игроков на площадке" : isShort ? string.Empty
 				: $"{count} из {maxCount} игроков на площадке{((isGroup ?? false) && Courts.Count > 1 && Courts.IndexOf(court) is int index && index >= 0 ? $" с ID {index}" : string.Empty)}"
 				+ Environment.NewLine);
 
@@ -41,7 +41,7 @@ namespace PrenburtisBot.Forms
 						rating = rating is null ? player.Rating : rating + player.Rating;
 
 				string teamName = team.FormatName();
-				string value = $"{(string.IsNullOrEmpty(teamName) ? "Команда " : string.Empty)}#{++i}{teamName} ({team.PlayerCount}{(rating is null ? string.Empty : $" = {Math.Round((double)rating, 1)}")}): ";
+				string value = $"{(string.IsNullOrEmpty(teamName) && !isShort ? "Команда " : string.Empty)}#{++i}{teamName} ({team.PlayerCount}{(rating is null ? string.Empty : $" = {Math.Round((double)rating, 1)}")}): ";
 				if (isGroup is bool boolValue && !boolValue && team.Contains(userId))
 					value = ((string.IsNullOrEmpty(teamName) ? "Ваша " : "Вы в ") + value).ToUpper();
 

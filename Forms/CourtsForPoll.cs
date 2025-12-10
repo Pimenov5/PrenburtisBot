@@ -100,7 +100,7 @@ namespace PrenburtisBot.Forms
 				else 
 					courts.Add(simpleCourt);
 
-				result.Add(new(CourtPlayers.ToString(court, userId, this.Device.IsGroup)) { ParseMode = ParseMode.Markdown, ReplyToMessageId = -1 });
+				result.Add(new(CourtPlayers.ToString(court, userId, this.Device.IsGroup, true)) { ParseMode = ParseMode.Markdown, ReplyToMessageId = -1 });
 			}
 ;
 			return result;
