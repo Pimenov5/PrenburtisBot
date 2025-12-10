@@ -48,7 +48,9 @@ namespace PrenburtisBot.Forms
                 if (Environment.GetEnvironmentVariable($"SEND_POLL_OPTION_{i}") is string item && !string.IsNullOrEmpty(item))
                     options.Insert(i - 1, item);
 
-            Message pollMessage = await this.API.SendPoll(Device.DeviceId, question, options, false, PollType.Regular, false, 
+            const string REPLY_ID_POSTFIX = "_REPLY_ID";
+            Message pollMessage = await this.API.SendPoll(Device.DeviceId, question, options, false, PollType.Regular, false, null, 
+                Session.Get(typeof(SendPoll), this.Device.DeviceId.ToString() + REPLY_ID_POSTFIX) is string strReplyId && int.TryParse(strReplyId, out int replyId) ? replyId : null,
                 messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
 
             await this.API.PinChatMessage(Device.DeviceId, pollMessage.MessageId);
