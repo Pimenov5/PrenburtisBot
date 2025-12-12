@@ -10,6 +10,16 @@ namespace PrenburtisBot.Forms
 	internal class AddPlayers : RepliedToPollGroupFormBase
 	{
 		private string? _courtId;
+		private Attendance? _attendance;
+		private long? _userId;
+		private IEnumerable<Player>? _players;
+
+		protected void SaveForAttendance(long userId, Attendance attendance, IEnumerable<Player> players)
+		{
+			_userId = userId;
+			_attendance = attendance;
+			_players = players;
+		}
 
 		protected override TextMessage GetTextMessage(long userId, IReadOnlyCollection<Player> players, params string[] args)
 		{
@@ -24,29 +34,22 @@ namespace PrenburtisBot.Forms
 			if (count != 0)
 				throw new InvalidOperationException($"Не удалось добавить {count} из {indexes.Length} игроков");
 
-			try
+			Attendance? attendanceOrNull = null;
+			if (args.Length > 0)
 			{
-				Attendance? attendanceOrNull = null;
-				if (args.Length > 0)
+				string argument = args[args.Length >= 2 ? 1 : 0];
+				attendanceOrNull = argument.ToUpper() switch
 				{
-					string argument = args[args.Length >= 2 ? 1 : 0];
-					attendanceOrNull = argument.ToUpper() switch
-					{
-						"INSERT" => Attendance.Insert,
-						"UPDATE" => Attendance.Update,
-						_ => throw new ArgumentException($"\"{argument}\" не является указанием как записать посещаемость", nameof(args))
-					};
-				}
-				else if (Environment.GetEnvironmentVariable("INSERT_ATTENDANCE") is string strValue && bool.TryParse(strValue, out bool boolValue) && boolValue)
-					attendanceOrNull = Attendance.Insert;
-				
-				if (attendanceOrNull is Attendance attendance)
-					Console.WriteLine($"Количество изменённых в посещаемости строк: {WriteAttendance.Write(userId, players, attendance)}");
+					"INSERT" => Attendance.Insert,
+					"UPDATE" => Attendance.Update,
+					_ => throw new ArgumentException($"\"{argument}\" не является указанием как записать посещаемость", nameof(args))
+				};
 			}
-			catch (Exception e)
-			{
-				Console.Error.WriteLine(e.ToString());
-			}
+			else if (Environment.GetEnvironmentVariable("INSERT_ATTENDANCE") is string strValue && bool.TryParse(strValue, out bool boolValue) && boolValue)
+				attendanceOrNull = Attendance.Insert;
+
+			if (attendanceOrNull is Attendance attendance)
+				this.SaveForAttendance(userId, attendance, players);
 
 			string text = CourtPlayers.ToString(court, userId, this.Device.IsGroup);
 			return new TextMessage(text) { ParseMode = ParseMode.Markdown };
@@ -79,6 +82,15 @@ namespace PrenburtisBot.Forms
 
 			courtId = int.Parse(_courtId ?? throw new NullReferenceException());
 			return court;
+		}
+
+		protected override async Task AfterMessagesSentAsync(IReadOnlyCollection<Telegram.Bot.Types.Message> messages, int? messageThreadId)
+		{
+			if (_attendance is Attendance attendance && _userId is long userId && _players is IEnumerable<Player> players)
+			{
+				int count = WriteAttendance.Write(userId, players, attendance);
+				Console.WriteLine("Количество изменённых в посещаемости строк: " + count.ToString());
+			}
 		}
 	}
 }

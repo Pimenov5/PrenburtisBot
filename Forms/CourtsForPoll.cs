@@ -103,6 +103,9 @@ namespace PrenburtisBot.Forms
 				result.Add(new(CourtPlayers.ToString(court, userId, this.Device.IsGroup, true)) { ParseMode = ParseMode.Markdown, ReplyToMessageId = -1 });
 			}
 ;
+			if (bool.TryParse(Environment.GetEnvironmentVariable("INSERT_ATTENDANCE"), out bool mustInsert) && mustInsert)
+				this.SaveForAttendance(userId, Attendance.Insert, players);
+
 			return result;
 		}
 
@@ -111,6 +114,8 @@ namespace PrenburtisBot.Forms
 			List<InputPollOption> options = new(3);
 			for (int i = 1; i <= messages.Count; options.Add($"Вариант #{i++}")) ;
 			await this.API.SendPoll(this.Device.DeviceId, "Каким составом команд играем сегодня?", options, allowsMultipleAnswers: true, messageThreadId: messageThreadId);
+
+			await base.AfterMessagesSentAsync(messages, messageThreadId);
 		}
 	}
 }
