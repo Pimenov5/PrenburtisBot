@@ -35,7 +35,7 @@ namespace PrenburtisBot.Types
 		}
 
 		public static IReadOnlyCollection<Player> GetPlayers() => _users;
-		public static Player GetPlayer(long userId, string firstName, string? username = null)
+		public static Player GetPlayer(long userId, string firstName, string? username = null, bool mustUpdateFirstName = true)
 		{
 			User equalValue = new(userId, firstName, default, default, default, default, default);
 			if (!_users.TryGetValue(equalValue, out User? result))
@@ -43,7 +43,7 @@ namespace PrenburtisBot.Types
 
 			if (!string.IsNullOrEmpty(username))
 				result.Username = username;
-			if (firstName != result.FirstName && !string.IsNullOrEmpty(firstName))
+			if (mustUpdateFirstName && firstName != result.FirstName && !string.IsNullOrEmpty(firstName))
 			{
 				Console.WriteLine($"Имя {result} обновлено на {firstName}");
 				result.FirstName = firstName;
