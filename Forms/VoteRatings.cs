@@ -47,12 +47,6 @@ namespace PrenburtisBot.Forms
 			return result;
 		}
 
-		private static void CheckFieldCount(SqliteDataReader reader, int fieldCount)
-		{
-			if (reader.FieldCount != fieldCount)
-				throw new Exception($"Количество полей в результате запроса должно быть равно {fieldCount}, а не {reader.FieldCount}");
-		}
-
 		private static Form GetForm()
 		{
 			using SqliteCommand command = new("SELECT MAX(id) FROM ratings_forms WHERE closed_timestamp is NULL", SqliteConnection);
