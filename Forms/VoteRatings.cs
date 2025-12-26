@@ -7,16 +7,23 @@ using System.Text;
 using TelegramBotBase.Form;
 using Telegram.Bot.Types.Enums;
 using TelegramBotBase.Args;
+using System.Collections.ObjectModel;
 
 namespace PrenburtisBot.Forms
 {
 	[BotCommand("Заполнить рейтинги игроков")]
 	internal class VoteRatings : SqliteBotCommandFormBase
 	{
+		private class Form(long id, IDictionary<long, (bool, bool)> permissions)
+		{
+			public long Id = id;
+			public ReadOnlyDictionary<long, (bool, bool)> Permissions = new(permissions);
+		}
+
 		private static List<Player>? s_sortedPlayers;
 		private static Dictionary<string, Player>? s_players;
 
-		private static Dictionary<string, Player> CreatePlayers(IReadOnlyCollection<Player> players)
+		private static Dictionary<string, Player> CreatePlayers(IReadOnlyCollection<Player> players, IDictionary<long, (bool, bool)> permissions)
 		{
 			if (players.Count == 0)
 				throw new ArgumentException("Отсутствуют данные игроков для заполнения");
@@ -24,7 +31,7 @@ namespace PrenburtisBot.Forms
 			Dictionary<string, Player> result = new(players.Count);
 			foreach (Player player in players)
 			{
-				if (player is not Types.User user || !user.NeedVote)
+				if (!permissions.TryGetValue(player.UserId, out (bool, bool) permission) || !permission.Item2)
 					continue;
 
 				foreach (Player item in players)
@@ -46,18 +53,25 @@ namespace PrenburtisBot.Forms
 				throw new Exception($"Количество полей в результате запроса должно быть равно {fieldCount}, а не {reader.FieldCount}");
 		}
 
-		private static int GetFormId()
+		private static Form GetForm()
 		{
-			using SqliteCommand command = new("SELECT max(id) FROM ratings_forms WHERE closed_timestamp is NULL", SqliteConnection);
-			using SqliteDataReader reader = command.ExecuteReader();
-			VoteRatings.CheckFieldCount(reader, 1);
-			if (reader.HasRows && reader.Read() && !reader.IsDBNull(0))
-				return reader.GetInt32(0);
+			using SqliteCommand command = new("SELECT MAX(id) FROM ratings_forms WHERE closed_timestamp is NULL", SqliteConnection);
+			long id = (long)(command.ExecuteScalar() ?? throw new NullReferenceException("Отсутствует открытая форма для заполнения"));
 
-			throw new Exception("Отсутствует открытая форма для заполнения");
+			command.CommandText = "SELECT telegram_id, can_vote, need_vote FROM ratings_forms_permissions WHERE ratings_form_id = " + id.ToString();
+			using SqliteDataReader reader = command.ExecuteReader();
+
+			Dictionary<long, (bool, bool)> permissions = [];
+			while (reader.Read())
+				permissions.Add(reader.GetInt64(0), (reader.GetBoolean(1), reader.GetBoolean(2)));
+
+			if (permissions.Count == 0)
+				throw new Exception("Отсутствуют разрешения для формы голосования с ID " + id.ToString());
+
+			return new(id, permissions);
 		}
 
-		private static DateTime? GetUserFormTimestamp(int formId, long userId)
+		private static DateTime? GetUserFormTimestamp(long formId, long userId)
 		{
 			using SqliteCommand command = new($"SELECT timestamp FROM ratings_forms_users WHERE telegram_id = {userId} AND ratings_form_id = {formId}", SqliteConnection);
 			using SqliteDataReader reader = command.ExecuteReader();
@@ -68,7 +82,8 @@ namespace PrenburtisBot.Forms
 			return reader.GetDateTime(0);
 		}
 
-		private int? _formId, _lastMessageId;
+		private Form? _form;
+		private int? _lastMessageId;
 		private bool? _isConfirmed;
 		private readonly Dictionary<Player, int> _votes = [];
 
@@ -83,7 +98,7 @@ namespace PrenburtisBot.Forms
 
 		private int WriteVotes(long userId)
 		{
-			static long GetFormUserId(int formId, long userId, SqliteTransaction transaction)
+			static long GetFormUserId(long formId, long userId, SqliteTransaction transaction)
 			{
 				using SqliteCommand command = new($"INSERT INTO ratings_forms_users (telegram_id, ratings_form_id) VALUES ({userId}, {formId}) RETURNING id",
 					SqliteConnection, transaction);
@@ -105,7 +120,7 @@ namespace PrenburtisBot.Forms
 			using SqliteTransaction transaction = SqliteConnection.BeginTransaction();
 			try
 			{
-				long formUserId = GetFormUserId(_formId ?? throw new NullReferenceException(), userId, transaction);
+				long formUserId = GetFormUserId(_form?.Id ?? throw new NullReferenceException(), userId, transaction);
 
 				using SqliteCommand command = new(string.Format(stringBuilder.ToString(), formUserId), SqliteConnection, transaction);
 				using SqliteDataReader reader = command.ExecuteReader();
@@ -144,13 +159,13 @@ namespace PrenburtisBot.Forms
 				}
 			}
 
-			_formId ??= VoteRatings.GetFormId();
-			if (_votes.Count == 0 && VoteRatings.GetUserFormTimestamp(_formId ?? throw new NullReferenceException(), userId) is DateTime timestamp)
+			_form ??= VoteRatings.GetForm();
+			if (_votes.Count == 0 && VoteRatings.GetUserFormTimestamp(_form?.Id ?? throw new NullReferenceException(), userId) is DateTime timestamp)
 				throw new Exception($"Вы уже отправили рейтинги игроков в {timestamp}");
 
 			bool needSort = s_sortedPlayers is null;
 			s_sortedPlayers ??= [..Users.GetPlayers()];
-			s_sortedPlayers.RemoveAll((Player player) => player is not Types.User user || (!user.NeedVote && !user.CanVote));
+			s_sortedPlayers.RemoveAll((Player player) => !_form.Permissions.TryGetValue(player.UserId, out (bool, bool) permission) || (!permission.Item1 && !permission.Item2));
 			if (s_sortedPlayers.Count == 0)
 				throw new InvalidOperationException("Список постоянных активных игроков пуст");
 			if (needSort)
@@ -164,10 +179,10 @@ namespace PrenburtisBot.Forms
 					break;
 				}
 
-			if (userAsPlayer is not Types.User user || !user.CanVote)
+			if (userAsPlayer is null || !_form.Permissions.TryGetValue(userAsPlayer.UserId, out (bool, bool) permission) || !permission.Item1)
 				throw new Exception("Только постоянные игроки с допуском могут заполнять рейтинги");
 
-			s_players ??= VoteRatings.CreatePlayers(s_sortedPlayers);
+			s_players ??= VoteRatings.CreatePlayers(s_sortedPlayers, _form.Permissions);
 
 			if (_votes.Count == 0)
 			{
