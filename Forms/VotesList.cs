@@ -13,7 +13,7 @@ namespace PrenburtisBot.Forms
 	{
 		public async Task<TextMessage> RenderAsync()
 		{
-			using SqliteCommand command = new("SELECT MAX(id) FROM ratings_forms WHERE closed_timestamp", SqliteConnection);
+			using SqliteCommand command = new("SELECT MAX(id) FROM ratings_forms WHERE closed_timestamp IS NULL", SqliteConnection);
 			using SqliteDataReader reader = command.ExecuteReader();
 			string formId = reader.HasRows && reader.Read() ? reader.GetString(0) : throw new NullReferenceException("Не удалось найти последнюю форму голосования за рейтинг");
 
