@@ -49,9 +49,15 @@ namespace PrenburtisBot.Forms
 
 		private static Form GetForm()
 		{
-			using SqliteCommand command = new("SELECT MAX(id) FROM ratings_forms WHERE closed_timestamp is NULL", SqliteConnection);
-			long id = (long)(command.ExecuteScalar() ?? throw new NullReferenceException("Отсутствует открытая форма для заполнения"));
+			using SqliteCommand command = new("SELECT MAX(id), opened_timestamp FROM ratings_forms WHERE closed_timestamp is NULL", SqliteConnection);
+			using SqliteDataReader formReader = command.ExecuteReader();
+			if (!formReader.Read())
+				throw new Exception("Отсутствует открытая для заполнения форма");
+			if (formReader.GetDateTime(1) is DateTime timestamp && DateTime.UtcNow < timestamp)
+				throw new Exception($"Форма голосования будет открыта с {timestamp} (UTC)");
 
+			long id = formReader.GetInt64(0);
+			formReader.Close();
 			command.CommandText = "SELECT telegram_id, can_vote, need_vote FROM ratings_forms_permissions WHERE ratings_form_id = " + id.ToString();
 			using SqliteDataReader reader = command.ExecuteReader();
 
