@@ -71,17 +71,6 @@ namespace PrenburtisBot.Forms
 			return new(id, permissions);
 		}
 
-		private static DateTime? GetUserFormTimestamp(long formId, long userId)
-		{
-			using SqliteCommand command = new($"SELECT timestamp FROM ratings_forms_users WHERE telegram_id = {userId} AND ratings_form_id = {formId}", SqliteConnection);
-			using SqliteDataReader reader = command.ExecuteReader();
-			if (!(reader.HasRows && reader.Read()))
-				return null;
-
-			VoteRatings.CheckFieldCount(reader, 1);
-			return reader.GetDateTime(0);
-		}
-
 		private Form? _form;
 		private int? _lastMessageId;
 		private bool? _isConfirmed;
@@ -160,8 +149,12 @@ namespace PrenburtisBot.Forms
 			}
 
 			_form ??= VoteRatings.GetForm();
-			if (_votes.Count == 0 && VoteRatings.GetUserFormTimestamp(_form?.Id ?? throw new NullReferenceException(), userId) is DateTime timestamp)
-				throw new Exception($"Вы уже отправили рейтинги игроков в {timestamp}");
+			using (SqliteCommand timestampCommand = new($"SELECT timestamp FROM ratings_forms_users WHERE telegram_id = {userId} AND ratings_form_id = {_form.Id}", SqliteConnection))
+			{
+				DateTime? timestamp = (DateTime?)timestampCommand.ExecuteScalar();
+				if (_votes.Count == 0 && timestamp is not null)
+					throw new Exception($"Вы уже отправили рейтинги игроков в {timestamp}");
+			}
 
 			bool needSort = s_sortedPlayers is null;
 			s_sortedPlayers ??= [..Users.GetPlayers()];
