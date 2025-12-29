@@ -18,7 +18,8 @@ namespace PrenburtisBot.Forms
 			using SqliteCommand formCommand = new("SELECT MAX(id) FROM ratings_forms WHERE closed_timestamp IS NULL", SqliteConnection);
 			long formId = (long)(formCommand.ExecuteScalar() ?? throw new Exception("Не удалось найти последнюю незакрытую форму для голосования за рейтинг"));
 
-			using SqliteCommand idsCommand = new("SELECT telegram_id FROM ratings_forms_permissions WHERE can_vote = 1 AND ratings_form_id = " + formId.ToString(), SqliteConnection);
+			using SqliteCommand idsCommand = new(string.Format("SELECT telegram_id FROM ratings_forms_permissions WHERE can_vote = 1 AND ratings_form_id = {0}"
+				+ " AND telegram_id NOT IN (SELECT telegram_id FROM ratings_forms_users WHERE ratings_form_id = {0})", formId), SqliteConnection);
 			using SqliteDataReader idsReader = idsCommand.ExecuteReader();
 
 			List<long> ids = [];
