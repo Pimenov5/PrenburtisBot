@@ -63,7 +63,7 @@ namespace PrenburtisBot
 				}
 			}
 
-			if (args.Length == 1 && args[0] == typeof(ReadSession).Name && Session.Get(typeof(IBeforeBotStartAsyncExecutable), DateTime.Now.DayOfWeek.ToString()) is string schedule 
+			if (args.Length == 1 && args[0] == nameof(ReadSession) && Session.Get(typeof(IBeforeBotStartAsyncExecutable), DateTime.Now.DayOfWeek.ToString()) is string schedule
 				&& !string.IsNullOrEmpty(schedule) && Environment.GetEnvironmentVariable("SCHEDULE_SEPARATOR") is string separator && !string.IsNullOrEmpty(separator))
 			{
 				await BeforeBotStartExecuteAsync(schedule.Split(separator));
