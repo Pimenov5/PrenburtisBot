@@ -9,6 +9,7 @@ using PrenburtisBot.Attributes;
 using System.Reflection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using PrenburtisBot.BeforeBotStart;
 
 namespace PrenburtisBot
 {
@@ -60,6 +61,12 @@ namespace PrenburtisBot
 				{
 					Console.Error.WriteLine($"Не удалось выполнить \"{commandName}\" из-за ошибки: {(e.InnerException ?? e).Message}");
 				}
+			}
+
+			if (args.Length == 1 && args[0] == nameof(ReadSession) && Session.Get(typeof(IBeforeBotStartAsyncExecutable), DateTime.Now.DayOfWeek.ToString()) is string schedule
+				&& !string.IsNullOrEmpty(schedule) && Environment.GetEnvironmentVariable("SCHEDULE_SEPARATOR") is string separator && !string.IsNullOrEmpty(separator))
+			{
+				await BeforeBotStartExecuteAsync(schedule.Split(separator));
 			}
 		}
 
