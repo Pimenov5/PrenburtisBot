@@ -9,15 +9,23 @@ using PrenburtisBot.Types;
 namespace PrenburtisBot.Forms
 {
     [BotCommand("Создать опрос для переклички", BotCommandScopeType.AllChatAdministrators)]
-    internal class SendPoll : BotCommandGroupFormBase
+    internal class SendPoll : BotCommandGroupFormBase, IAfterBotStartAsyncExecutable
     {
         public const string PLAYER_JOINED = "Иду";
         public const byte PLAYER_JOINED_BYTE = 48;
+
         public async Task<TextMessage> RenderAsync(MessageResult message)
         {
-            string[] args = this.GetBotCommandParameters(message);
+			string[] args = this.GetBotCommandParameters(message);
+            int? messageThreadId = message.Message.Chat.IsForum ? message.Message.MessageThreadId : null;
+
+            return await this.ExecuteAsync(this.API, this.Device.DeviceId, messageThreadId, args);
+		}
+
+        public async Task<TextMessage> ExecuteAsync(ITelegramBotClient botClient, ChatId chatId, int? messageThreadId, params string[] args)
+        {
             if (args.Length > 2)
-                throw new ArgumentException($"Невалидное количество аргументов команды: {args.Length}", nameof(message));
+                throw new ArgumentException($"Невалидное количество аргументов команды: {args.Length}", nameof(args));
 
             double? dayCount = null;
             string? time = null;
@@ -31,11 +39,11 @@ namespace PrenburtisBot.Forms
                 + $" ({DateTime.Today.AddDays(dayCount ?? 1).ToString("dddd", CultureInfo.GetCultureInfo("ru-RU"))}){(string.IsNullOrEmpty(time) ? string.Empty : $" в {time}")}";
 
             int messageId = default;
-            if (Session.Get(typeof(SendPoll), this.Device.DeviceId.ToString()) is string pinnedMessageId && int.TryParse(pinnedMessageId, out messageId))
+            if (Session.Get(typeof(SendPoll), chatId.ToString()) is string pinnedMessageId && int.TryParse(pinnedMessageId, out messageId))
             {
                 try
                 {
-                    await this.API.UnpinChatMessage(this.Device.DeviceId, messageId);
+                    await botClient.UnpinChatMessage(chatId, messageId);
                 }
                 catch (Exception e)
                 {
@@ -49,24 +57,24 @@ namespace PrenburtisBot.Forms
                     options.Insert(i - 1, item);
 
             const string REPLY_ID_POSTFIX = "_REPLY_ID";
-            Message pollMessage = await this.API.SendPoll(Device.DeviceId, question, options, false, PollType.Regular, false, null, 
-                Session.Get(typeof(SendPoll), this.Device.DeviceId.ToString() + REPLY_ID_POSTFIX) is string strReplyId && int.TryParse(strReplyId, out int replyId) ? replyId : null,
-                messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
+            Message pollMessage = await botClient.SendPoll(chatId, question, options, false, PollType.Regular, false, null, 
+                Session.Get(typeof(SendPoll), chatId.ToString() + REPLY_ID_POSTFIX) is string strReplyId && int.TryParse(strReplyId, out int replyId) ? replyId : null,
+                messageThreadId: messageThreadId);
 
-            await this.API.PinChatMessage(Device.DeviceId, pollMessage.MessageId);
-            Session.Set(typeof(SendPoll), this.Device.DeviceId.ToString(), pollMessage.MessageId.ToString());
+            await botClient.PinChatMessage(chatId, pollMessage.MessageId);
+            Session.Set(typeof(SendPoll), chatId.ToString(), pollMessage.MessageId.ToString());
             Session.TryWrite();
 
-            Update[] updates = await this.API.GetUpdates();
+            Update[] updates = await botClient.GetUpdates();
             foreach (Update update in updates) 
-                if (update.Message is Message messageFromUpdate && messageFromUpdate.Chat.Id == this.Device.DeviceId && messageFromUpdate.Type == MessageType.PinnedMessage 
+                if (update.Message is Message messageFromUpdate && messageFromUpdate.Chat.Id == chatId && messageFromUpdate.Type == MessageType.PinnedMessage 
                     && messageFromUpdate.PinnedMessage is Message pinnedMessage && pinnedMessage.MessageId == pollMessage.MessageId)
                 {
-                    await this.Device.DeleteMessage(messageFromUpdate.MessageId);
+                    await botClient.DeleteMessage(chatId, messageFromUpdate.MessageId);
                     break;
                 }
 
-            return new TextMessage(string.Empty) { NavigateTo = messageId == default ? new(new Start(), Start.SET_QUIET) : new(new StopPoll(), this.Device.DeviceId, messageId) };
+            return new TextMessage(string.Empty) { NavigateTo = messageId == default ? new(new Start(), Start.SET_QUIET) : new(new StopPoll(), chatId, messageId) };
         }
     }
 }
