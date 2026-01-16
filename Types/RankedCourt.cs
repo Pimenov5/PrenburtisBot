@@ -26,7 +26,7 @@ namespace PrenburtisBot.Types
 		public Settings(bool? mustSortTeamsByRatingSum = null, bool? mustSortPlayersBySkills = null, bool? mustSkipWeakestSkilledPlayers = null, double? teamsRatingSumMaxDifference = null)
 		{
 			this.MustSortTeamsByRatingSum = mustSortTeamsByRatingSum
-				?? (Environment.GetEnvironmentVariable("SORT_TEAMS_BY_RATING_SUN") is string strSortByRatingSum && bool.TryParse(strSortByRatingSum, out bool boolSortByRatingSum) ? boolSortByRatingSum : MUST_SORT_TEAMS_BY_RATING_SUM);
+				?? (Environment.GetEnvironmentVariable("SORT_TEAMS_BY_RATING_SUM") is string strSortByRatingSum && bool.TryParse(strSortByRatingSum, out bool boolSortByRatingSum) ? boolSortByRatingSum : MUST_SORT_TEAMS_BY_RATING_SUM);
 
 			this.MustSortPlayersBySkills = mustSortPlayersBySkills
 				?? (Environment.GetEnvironmentVariable("SORT_PLAYERS_BY_SKILLS") is string strSortBySkills && bool.TryParse(strSortBySkills, out bool boolSortBySkills) ? boolSortBySkills : MUST_SORT_PLAYERS_BY_SKILLS);
