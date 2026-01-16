@@ -13,7 +13,7 @@ using PrenburtisBot.BeforeBotStart;
 
 namespace PrenburtisBot
 {
-    internal class Program
+	internal class Program
 	{
 		private static async Task BeforeBotStartExecuteAsync(params string[] args)
 		{
@@ -67,6 +67,97 @@ namespace PrenburtisBot
 				&& !string.IsNullOrEmpty(schedule) && Environment.GetEnvironmentVariable("SCHEDULE_SEPARATOR") is string separator && !string.IsNullOrEmpty(separator))
 			{
 				await BeforeBotStartExecuteAsync(schedule.Split(separator));
+			}
+		}
+
+		private static async Task AfterBotStartExecuteAsync(ITelegramBotClient botClient)
+		{
+			List<Type> types = [.. typeof(Program).Assembly.GetTypes().Where((Type type) => type.GetInterface(nameof(IAfterBotStartAsyncExecutable)) is not null)];
+
+			if (types.Count == 0 || Session.Get(typeof(IAfterBotStartAsyncExecutable), DateTime.Now.DayOfWeek.ToString()) is not string schedule || string.IsNullOrEmpty(schedule)
+				|| Environment.GetEnvironmentVariable("SCHEDULE_SEPARATOR") is not string scheduleSeparator || string.IsNullOrEmpty(scheduleSeparator)
+				|| Environment.GetEnvironmentVariable("SCHEDULE_COMMAND_SEPARATOR") is not string commandSeparator || string.IsNullOrEmpty(commandSeparator))
+			{
+				return;
+			}
+
+			string? envIsConfirmed = Environment.GetEnvironmentVariable("EXECUTE_AFTER_BOT_START"), isConfirmed = envIsConfirmed;
+			while (string.IsNullOrEmpty(isConfirmed) || (isConfirmed != "+" && isConfirmed != "-"))
+			{
+				Console.WriteLine("Вызвать команды после запуска бота? (+/-)");
+				isConfirmed = Console.ReadLine()?.Trim();
+			}
+
+			if (isConfirmed == "-")
+			{
+				if (isConfirmed == envIsConfirmed)
+					Console.WriteLine("Отменён вызов команд после запуска бота");
+				return;
+			}
+
+			string commandName = string.Empty;
+
+			foreach (string line in schedule.Split(scheduleSeparator))
+			{
+				List<string> items = [.. line.Split(commandSeparator)];
+				if (items.Count == 0)
+					continue;
+
+				const int METHOD_PARAMS_COUNT = 4;
+				ChatId chatId = 0;
+				int? messageThreadId = null;
+				string[] args = [];
+
+				try
+				{
+					for (int i = 0; i < METHOD_PARAMS_COUNT; i++)
+					{
+						switch (i)
+						{
+							case 0:
+								commandName = items[i];
+								break;
+							case 1:
+								chatId = items[i];
+								break;
+							case 2:
+								messageThreadId = int.TryParse(items[i], out int threadId) ? threadId : null;
+								break;
+							case 3:
+								args = [.. items[i..]];
+								break;
+							default:
+								throw new Exception($"Некорректное количество аргументов команды после запуска бота: " + line);
+						}
+					}
+
+					if (types.Find((Type type) => string.Equals(type.Name, commandName, StringComparison.Ordinal)) is Type type
+						&& type.GetConstructor([])?.Invoke([]) is IAfterBotStartAsyncExecutable command)
+					{
+						async Task ExecuteAsync(IAfterBotStartAsyncExecutable command, ChatId chatId, int? messageThreadId, params string[] args)
+						{
+							TextMessage textMessage = await command.ExecuteAsync(botClient, chatId, messageThreadId, args);
+							Console.WriteLine($"Результат \"{commandName}\": " + (string.IsNullOrEmpty(textMessage.Text) ? "выполнено успешно" : textMessage.Text));
+
+							if (textMessage.NavigateTo.Form is IAfterBotStartAsyncExecutable nextForm && textMessage.NavigateTo.Args is object[] nextArgs)
+							{
+								args = [..nextArgs.ToList().ConvertAll((object item) => item.ToString() ?? throw new NullReferenceException("Невозможно преобразовать объект в строку"))
+									.Where((string item) => item != chatId && item != messageThreadId.ToString())];
+
+								commandName = nextForm.GetType().Name;
+								await ExecuteAsync(nextForm, chatId, messageThreadId, args);
+							}
+						}
+
+						await ExecuteAsync(command, chatId, messageThreadId, args);
+					}
+					else
+						Console.Error.WriteLine($"Не удалось создать или вызвать \"{commandName}\"");
+				}
+				catch (Exception e)
+				{
+					Console.Error.WriteLine(string.IsNullOrEmpty(commandName) ? e.Message : $"Результат \"{commandName}\": " + e.Message);
+				}
 			}
 		}
 
@@ -133,6 +224,8 @@ namespace PrenburtisBot
 
 			await bot.Start();
 			Console.WriteLine($"Бот @{(await bot.Client.TelegramClient.GetMe()).Username} запущен и работает");
+
+			await AfterBotStartExecuteAsync(bot.Client.TelegramClient);
 			while (true) { }
 		}
 	}
