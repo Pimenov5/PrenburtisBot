@@ -104,7 +104,10 @@ namespace PrenburtisBot.Forms
 			}
 ;
 			if (bool.TryParse(Environment.GetEnvironmentVariable("INSERT_ATTENDANCE"), out bool mustInsert) && mustInsert)
-				this.SaveForAttendance(userId, Attendance.Insert, players);
+			{
+				this.SaveForAttendance(userId, args.Length == 1 && args[0].Equals(Attendance.Update.ToString(), StringComparison.OrdinalIgnoreCase) 
+					? Attendance.Update : Attendance.Insert, players);
+			}
 
 			return result;
 		}
