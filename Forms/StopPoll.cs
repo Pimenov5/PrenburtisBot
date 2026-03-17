@@ -17,7 +17,7 @@ namespace PrenburtisBot.Forms
 			return new TextMessage(string.Empty);
 		}
 
-		public async Task<TextMessage> RenderAsync(long chatId, int messageId)
+		public async Task<TextMessage> RenderAsync(ChatId chatId, int messageId)
 		{
 			return await ExecuteAsync(this.API, chatId, null, [messageId.ToString()]);
 		}
