@@ -161,8 +161,52 @@ namespace PrenburtisBot
 			}
 		}
 
+		private static int ReadVariables(string path)
+		{
+			if (!File.Exists(path))
+				throw new ArgumentException("Не существует файла " + path);
+
+			List<string> lines = [.. File.ReadAllLines(path)];
+			const string ENV_VARIABLES = "environmentVariables";
+			const string NAME_VALUE_SEPARATOR = "\": \"";
+
+			int result = 0;
+			for (int i = 0; i < lines.Count; i++)
+				if (lines[i].Contains(ENV_VARIABLES))
+				{
+					for (int j = i + 1; j < lines.Count && lines[j].Contains(NAME_VALUE_SEPARATOR); j++)
+					{
+						string[] stringArray = lines[j].Split(NAME_VALUE_SEPARATOR);
+						string variable = stringArray[0].TrimStart()[1..];
+						string value = stringArray[1].EndsWith(',') ? stringArray[1][0..^2] : stringArray[1][0..^1];
+
+						Environment.SetEnvironmentVariable(variable, value);
+						++result;
+					}
+
+					break;
+				}
+
+			return result;
+		}
+
 		private static async Task Main(string[] args)
 		{
+			if (args.Length > 0 && args[0].StartsWith(nameof(Program.ReadVariables)) && args[0].Split(' ') is string[] stringArray && stringArray.Length == 2)
+			{
+				try
+				{
+					int count = Program.ReadVariables(stringArray[1]);
+					Console.WriteLine($"Количество добавленных переменных окружения из файла {stringArray[1]} = {count}");
+				}
+				catch (Exception ex)
+				{
+					Console.Error.WriteLine(ex.Message);
+				}
+
+				args = args[1..];
+			}
+
 			const string API_KEY = "API_KEY";
 			string? apiKey = Environment.GetEnvironmentVariable(API_KEY);
 			if (string.IsNullOrEmpty(apiKey))
