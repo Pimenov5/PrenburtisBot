@@ -10,6 +10,7 @@ using System.Reflection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using PrenburtisBot.BeforeBotStart;
+using PrenburtisBot.AfterBotStart;
 
 namespace PrenburtisBot
 {
@@ -217,6 +218,7 @@ namespace PrenburtisBot
 			TextMessage.GetStartForm = () => new Start();
 			Login.LoginEvent += (Type? type, WTelegram.Client client) => {
 				RepliedToPollGroupFormBase.TelegramClient = client;
+				ForwardPollForCourts.TelegramClient = client;
 			};
 			await bot.UploadBotCommands();
 
