@@ -30,7 +30,7 @@ namespace PrenburtisBot.Forms
 				if (!long.TryParse(Environment.GetEnvironmentVariable("BOT_OWNER_CHAT_ID"), out long botOwnerChatId))
 					throw new Exception("Отсутствует идентификатор владельца бота");
 
-				IReplyMarkup replyMarkup = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Да",
+				ReplyMarkup replyMarkup = new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Да",
 					new CallbackData(nameof(Start), Commands.ParamsToString(user.Id.ToString(), bool.TrueString))),
 					InlineKeyboardButton.WithCallbackData("Нет", new CallbackData(nameof(Start), Commands.ParamsToString(user.Id.ToString(), bool.FalseString))));
 				await this.API.SendDocument(botOwnerChatId, InputFile.FromFileId(document.FileId),

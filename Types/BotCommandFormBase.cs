@@ -140,7 +140,7 @@ namespace PrenburtisBot.Types
 			{
 				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
-					IReplyMarkup? replyMarkup = this.Device.IsGroup ? null : textMessage.ReplyMarkup;
+					ReplyMarkup? replyMarkup = this.Device.IsGroup ? null : textMessage.ReplyMarkup;
 					await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, null, replyMarkup,
 						messageThreadId: message.Message.Chat.IsForum ? message.Message.MessageThreadId : null);
 

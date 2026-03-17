@@ -19,7 +19,7 @@ namespace PrenburtisBot.Types
 
 		public string Text = text;
 		public TextMessageKind Kind = messageKind;
-		public IReplyMarkup? ReplyMarkup;
+		public ReplyMarkup? ReplyMarkup;
 		public ParseMode ParseMode;
 		public FormWithArgs NavigateTo;
 		public int? ReplyToMessageId;
