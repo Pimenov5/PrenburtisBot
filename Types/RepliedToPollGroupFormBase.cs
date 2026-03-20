@@ -11,6 +11,8 @@ namespace PrenburtisBot.Types
 		protected abstract TextMessage GetTextMessage(long userId, IReadOnlyCollection<Player> players, params string[] args);
 		protected virtual IReadOnlyList<TextMessage> GetTextMessages(long userId, IReadOnlyCollection<Player> players, params string[] args) => [GetTextMessage(userId, players, args)];
 
+		public const string MUST_REMOVE_POLL = "removePoll";
+
 		public async Task<IReadOnlyList<TextMessage>> RenderAsync(MessageResult message)
 		{
 			if (message.Message.ReplyToMessage is not Telegram.Bot.Types.Message repliedMessage || repliedMessage.Poll is not Telegram.Bot.Types.Poll poll || poll.IsAnonymous
@@ -24,14 +26,21 @@ namespace PrenburtisBot.Types
 
 			IReadOnlyCollection<Player> players = await TelegramClient.GetPlayersFromPoll(repliedMessage, [SendPoll.PLAYER_JOINED_BYTE]);
 
-			long userId = message.Message.From?.Id ?? throw new NullReferenceException();
-			string[] args = message.BotCommandParameters.ToArray();
-			if (args.Length > 0 && args[^1].StartsWith('@') && (await this.API.GetMe()).Username is string botUsername && args[^1].Equals('@' + botUsername))
-				Array.Resize(ref args, args.Length - 1);
+			List<string> parameters = message.BotCommandParameters;
+			if (parameters.Count > 0 && parameters[^1].StartsWith('@') && (await this.API.GetMe()).Username is string botUsername && parameters[^1].Equals('@' + botUsername))
+				parameters.RemoveAt(parameters.Count - 1);
+			int index = parameters.IndexOf(MUST_REMOVE_POLL);
+			if (index >= 0)
+				parameters.RemoveAt(index);
 
-			IReadOnlyList<TextMessage> textMessages = this.GetTextMessages(userId, players, args);
+			long userId = message.Message.From?.Id ?? throw new NullReferenceException();
+			IReadOnlyList<TextMessage> textMessages = this.GetTextMessages(userId, players, [..parameters]);
 			foreach (TextMessage textMessage in textMessages)
 				textMessage.ReplyToMessageId ??= repliedMessage.MessageId;
+
+			if (index >= 0)
+				await this.Device.DeleteMessage(repliedMessage.MessageId);
+
 			return textMessages;
 		}
 	}

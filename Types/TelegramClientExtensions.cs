@@ -5,6 +5,16 @@ namespace PrenburtisBot.Types
 {
 	internal static class TelegramClientExtensions
 	{
+		public static async Task<InputChannel> CreateInputChannelAsync(this Client client, Telegram.Bot.Types.Chat chat)
+		{
+			Messages_Chats chats = await client.Messages_GetAllChats();
+			long chatId = chat.Id.ToString().StartsWith("-100") ? long.Parse(chat.Id.ToString()[4..]) : chat.Id;
+			if (!chats.chats.TryGetValue(chatId, out ChatBase? chatBase) || chatBase is not Channel channel)
+				throw new InvalidOperationException($"Не удалось найти {chat.Type} с ID {chatId}");
+
+			return new(channel.id, channel.access_hash);
+		}
+
 		public static async Task<IReadOnlyCollection<Player>> GetPlayersFromPoll(this Client client, Telegram.Bot.Types.Message message, byte[] option)
 		{
 			if (message.Poll is not Telegram.Bot.Types.Poll poll)
@@ -13,12 +23,8 @@ namespace PrenburtisBot.Types
 			Messages_VotesList? votes = null;
 			try
 			{
-				Messages_Chats chats = await client.Messages_GetAllChats();
-				long chatId = message.Chat.Id.ToString().StartsWith("-100") ? long.Parse(message.Chat.Id.ToString().Remove(0, 4)) : message.Chat.Id;
-				if (!chats.chats.TryGetValue(chatId, out ChatBase? chatBase) || chatBase is not Channel channel)
-					throw new InvalidOperationException($"Не удалось найти {message.Chat.Type} с ID {chatId}");
-
-				votes = await client.Messages_GetPollVotes(new InputChannel(channel.id, channel.access_hash), message.MessageId, option: option);
+				InputChannel inputChannel = await client.CreateInputChannelAsync(message.Chat);
+				votes = await client.Messages_GetPollVotes(inputChannel, message.MessageId, option: option);
 			}
 			catch (Exception e)
 			{
