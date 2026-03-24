@@ -261,8 +261,21 @@ namespace PrenburtisBot
 
 			TextMessage.GetStartForm = () => new Start();
 			Login.LoginEvent += (Type? type, WTelegram.Client client) => {
-				RepliedToPollGroupFormBase.TelegramClient = client;
-				ForwardPollForCourts.TelegramClient = client;
+				try
+				{
+					Type[] types = [..typeof(Program).Assembly.GetTypes().ToList().Where((Type type) => type.GetCustomAttribute<NeededTelegramClientAttribute>() is not null)];
+					foreach (Type item in types)
+					{
+						(item.GetProperty(item.GetCustomAttribute<NeededTelegramClientAttribute>()?.PropertyName
+							?? throw new NullReferenceException("Не удалось получить имя свойства для инициализации у класса " + item.Name))
+								?? throw new NullReferenceException("Не удалось найти свойство для инициализации у класса " + item.Name)).SetValue(null, client);
+					}
+				}
+				catch (Exception ex) 
+				{
+					Console.Error.WriteLine(ex.Message);
+					throw;
+				}
 			};
 			await bot.UploadBotCommands();
 

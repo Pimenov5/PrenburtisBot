@@ -1,12 +1,16 @@
-﻿using PrenburtisBot.Forms;
+﻿using PrenburtisBot.Attributes;
+using PrenburtisBot.Forms;
 using Telegram.Bot;
 using TelegramBotBase.Base;
 
 namespace PrenburtisBot.Types
 {
+	[NeededTelegramClient]
 	internal abstract class RepliedToPollGroupFormBase : BotCommandGroupFormBase
 	{
-		public static WTelegram.Client? TelegramClient = null;
+		private static WTelegram.Client? _telegramClient = null;
+
+		public static WTelegram.Client TelegramClient { set { _telegramClient = value; } }
 
 		protected abstract TextMessage GetTextMessage(long userId, IReadOnlyCollection<Player> players, params string[] args);
 		protected virtual IReadOnlyList<TextMessage> GetTextMessages(long userId, IReadOnlyCollection<Player> players, params string[] args) => [GetTextMessage(userId, players, args)];
@@ -21,10 +25,10 @@ namespace PrenburtisBot.Types
 				return [new($"Команда должна вызываться в ответ на не анонимный опрос с первым вариантом ответа \"{SendPoll.PLAYER_JOINED}\"")];
 			}
 
-			if (TelegramClient is null)
+			if (_telegramClient is null)
 				return [new("Невозможно получить список проголосовавших в опросе, т.к. вы ещё не авторизовались")];
 
-			IReadOnlyCollection<Player> players = await TelegramClient.GetPlayersFromPoll(repliedMessage, [SendPoll.PLAYER_JOINED_BYTE]);
+			IReadOnlyCollection<Player> players = await _telegramClient.GetPlayersFromPoll(repliedMessage, [SendPoll.PLAYER_JOINED_BYTE]);
 
 			List<string> parameters = message.BotCommandParameters;
 			if (parameters.Count > 0 && parameters[^1].StartsWith('@') && (await this.API.GetMe()).Username is string botUsername && parameters[^1].Equals('@' + botUsername))
