@@ -8,6 +8,7 @@ using TelegramBotBase.Form;
 using Telegram.Bot.Types.Enums;
 using TelegramBotBase.Args;
 using System.Collections.ObjectModel;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PrenburtisBot.Forms
 {
@@ -139,7 +140,7 @@ namespace PrenburtisBot.Forms
 				if (isConfirmed)
 				{
 					int count = this.WriteVotes(userId);
-					return new TextMessage($"Количество записанных ответов: {count}").NavigateToStart();
+					return new TextMessage($"Количество записанных ответов: {count}") { ReplyMarkup = ReplyMarkup.RemoveKeyboard }.NavigateToStart();
 				}
 				else
 				{
@@ -219,7 +220,8 @@ namespace PrenburtisBot.Forms
 					if (string.IsNullOrEmpty(text))
 						throw new Exception($"Не удалось найти уникальное имя игрока {player}");
 
-					return new TextMessage(text) { ParseMode = ParseMode.Markdown };
+					ReplyMarkup? replyMarkup = (string[][])[["1", "2", "3", "4", "5"], ["6", "7", "8", "9", "10"]];
+					return new TextMessage(text) { ParseMode = ParseMode.Markdown, ReplyMarkup = replyMarkup };
 				}
 
 			bool hasAllRatings = true;
