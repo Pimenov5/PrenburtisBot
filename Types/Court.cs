@@ -85,7 +85,7 @@
 			List<Player> players = new(collection);
 			uint?[] result = new uint?[players.Count];
 
-			for (int i = 0; i < players.Count; i++)
+			for (int i = 0; i < result.Length; i++)
 			{
 				int index = random.Next(players.Count);
 				result[i] = this.AddPlayer(players[index], random);
