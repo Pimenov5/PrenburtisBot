@@ -49,8 +49,7 @@ namespace PrenburtisBot.Types
 
 			if (_args.Length == 0)
 			{
-				args = args.Length == 1 && args[0].Contains(Commands.PARAMS_DELIMITER) ? args[0].Split(Commands.PARAMS_DELIMITER)[1..] : args.Length > 0 ? args
-					: string.IsNullOrEmpty(message.BotCommand) && !string.IsNullOrEmpty(message.Command) ? [message.Command] : [];
+				args = args.Length > 0 ? args : string.IsNullOrEmpty(message.BotCommand) && !string.IsNullOrEmpty(message.Command) ? [message.Command] : [];
 			}
 			else
 			{
