@@ -131,6 +131,8 @@ namespace PrenburtisBot.Forms
 			return count;
 		}
 
+		public static event Action<long, IDictionary<Player, int>>? OnVotesWrote;
+
 		public async Task<TextMessage> RenderAsync(long userId) => await RenderAsync(userId, null);
 		public async Task<TextMessage> RenderAsync(long userId, string? strRating)
 		{
@@ -140,6 +142,7 @@ namespace PrenburtisBot.Forms
 				if (isConfirmed)
 				{
 					int count = this.WriteVotes(userId);
+					OnVotesWrote?.Invoke(userId, _votes);
 					return new TextMessage($"Количество записанных ответов: {count}") { ReplyMarkup = ReplyMarkup.RemoveKeyboard }.NavigateToStart();
 				}
 				else

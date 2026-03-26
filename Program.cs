@@ -10,7 +10,7 @@ using System.Reflection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using PrenburtisBot.BeforeBotStart;
-using PrenburtisBot.AfterBotStart;
+using System.Text;
 
 namespace PrenburtisBot
 {
@@ -277,6 +277,39 @@ namespace PrenburtisBot
 					throw;
 				}
 			};
+
+			VoteRatings.OnVotesWrote += (long userId, IDictionary<Player, int> marks) =>
+			{
+				if (Environment.GetEnvironmentVariable("BOT_OWNER_CHAT_ID") is not string chatId || (long.TryParse(chatId, out long telegramId) && telegramId == userId) 
+					|| Environment.GetEnvironmentVariable("NOTIFY_WHEN_VOTED") is not string notifyWhenVoted || !bool.TryParse(notifyWhenVoted, out bool mustNotify) || !mustNotify)
+				{
+					return;
+				}
+
+				Task task = new(async () =>
+				{
+					Dictionary<int, List<Player>> dictionary = [];
+					foreach (KeyValuePair<Player, int> pair in marks)
+					{
+						if (!dictionary.ContainsKey(pair.Value))
+							dictionary.Add(pair.Value, []);
+
+						dictionary[pair.Value].Add(pair.Key);
+					}
+
+					List<KeyValuePair<int, List<Player>>> list = [..dictionary];
+					list.Sort((x, y) => y.Key.CompareTo(x.Key));
+
+					StringBuilder stringBuilder = new(Users.GetPlayer(userId, string.Empty).ToString() + " заполнил(а) форму голосования:" + Environment.NewLine + Environment.NewLine);
+					foreach (KeyValuePair<int, List<Player>> pair in list)
+						stringBuilder.Append($"{pair.Key} — ").AppendJoin(", ", pair.Value).AppendLine();
+
+					await bot.Client.TelegramClient.SendMessage(chatId, stringBuilder.ToString(), ParseMode.Markdown);
+				});
+
+				task.Start();
+			};
+
 			await bot.UploadBotCommands();
 
 			await Program.BeforeBotStartExecuteAsync(args);
