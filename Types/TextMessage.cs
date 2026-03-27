@@ -1,4 +1,5 @@
-﻿using Telegram.Bot.Types.Enums;
+﻿using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBotBase.Form;
 using TelegramBotBase.Markdown;
@@ -23,6 +24,7 @@ namespace PrenburtisBot.Types
 		public ParseMode ParseMode;
 		public FormWithArgs NavigateTo;
 		public int? ReplyToMessageId;
+		public LinkPreviewOptions? LinkPreviewOptions;
 
 		public TextMessage NavigateToStart(params object[] args)
 		{
