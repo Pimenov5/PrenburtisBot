@@ -75,6 +75,7 @@ namespace PrenburtisBot.Forms
 		private Form? _form;
 		private int? _lastMessageId;
 		private bool? _isConfirmed;
+		private ReplyMarkup? _replyMarkup;
 		private readonly Dictionary<Player, int> _votes = [];
 
 		private async Task TryDeleteLastMessage()
@@ -131,6 +132,7 @@ namespace PrenburtisBot.Forms
 			return count;
 		}
 
+		public const int MIN_RATING = 1, MAX_RATING = 10;
 		public static event Action<long, IDictionary<Player, int>>? OnVotesWrote;
 
 		public async Task<TextMessage> RenderAsync(long userId) => await RenderAsync(userId, null);
@@ -183,14 +185,14 @@ namespace PrenburtisBot.Forms
 
 			if (_votes.Count == 0)
 			{
-				await this.Device.Send("Вам будут отправляться игроки в алфавитном порядке. На каждое сообщение с именем игрока вы должны отправить его рейтинг от 1 до 10, где 1 —"
-					+ " это самый слабый игрок, а 10 — самый сильный только среди всех остальных, а не абсолютный уровень игры. Поэтому у вас ОБЯЗАТЕЛЬНО ДОЛЖНЫ БЫТЬ все оценки от 1 до 10,"
+				await this.Device.Send($"Вам будут отправляться игроки в алфавитном порядке. На каждое сообщение с именем игрока вы должны отправить его рейтинг от {MIN_RATING} до {MAX_RATING}, где {MIN_RATING} —"
+					+ $" это самый слабый игрок, а {MAX_RATING} — самый сильный только среди всех остальных, а не абсолютный уровень игры. Поэтому у вас ОБЯЗАТЕЛЬНО ДОЛЖНЫ БЫТЬ все оценки от {MIN_RATING} до {MAX_RATING},"
 					+ " иначе результаты не будет приняты. Перед сохранением результатов вы сможете проверить все отправленные значения.");
 			}
 			else if (!string.IsNullOrEmpty(strRating))
 			{
-				if (!int.TryParse(strRating, out int rating) || rating <= 0 || rating > 10)
-					throw new ArgumentException($"\"{strRating}\" не является рейтингом (от 1 до 10)");
+				if (!int.TryParse(strRating, out int rating) || rating <= 0 || rating > MAX_RATING)
+					throw new ArgumentException($"\"{strRating}\" не является рейтингом (от {MIN_RATING} до {MAX_RATING})");
 
 				if (this.Device.LastMessage.ReplyToMessage is Message repliedMessage && repliedMessage.Text is string messageText)
 				{
@@ -223,13 +225,26 @@ namespace PrenburtisBot.Forms
 					if (string.IsNullOrEmpty(text))
 						throw new Exception($"Не удалось найти уникальное имя игрока {player}");
 
-					ReplyMarkup? replyMarkup = (string[][])[["1", "2", "3", "4", "5"], ["6", "7", "8", "9", "10"]];
-					return new TextMessage(text) { ParseMode = ParseMode.Markdown, ReplyMarkup = replyMarkup };
+					if (_replyMarkup is null && (MAX_RATING - MIN_RATING + 1) % 2.0 == 0)
+					{
+						int rating = MIN_RATING;
+						string[][] buttons = new string[2][];
+						int length = (int)((MAX_RATING - MIN_RATING + 1) / 2.0);
+						for (int i = 0; i < buttons.Length; i++) {
+							buttons[i] = new string[length];
+							for (int j = 0; j < buttons[i].Length; j++)
+								buttons[i][j] = rating++.ToString();
+						}
+
+						_replyMarkup = buttons;
+					}
+
+					return new TextMessage(text) { ParseMode = ParseMode.Markdown, ReplyMarkup = _replyMarkup };
 				}
 
 			bool hasAllRatings = true;
 			StringBuilder stringBuilder = new();
-			for (int i = 10; i > 0; i--)
+			for (int i = MAX_RATING; i > 0; i--)
 			{
 				stringBuilder.Append($"{i} — ");
 				List<Player> players = _votes.Where((KeyValuePair<Player, int> pair) => pair.Value == i).ToList().ConvertAll<Player>((KeyValuePair<Player, int> pair) => pair.Key);
@@ -243,8 +258,8 @@ namespace PrenburtisBot.Forms
 				stringBuilder.AppendLine();
 			}
 
-			stringBuilder.AppendLine(Environment.NewLine + (hasAllRatings ? string.Empty : $"Ваши ответы не могут быть сохранены, т.к. вы не присвоили все оценки (от 1 до 10). ")
-				+ "Чтобы изменить рейтинг конкретного игрока, ответьте на сообщение с его именем новым значением рейтинга (от 1 до 10)");
+			stringBuilder.AppendLine(Environment.NewLine + (hasAllRatings ? string.Empty : $"Ваши ответы не могут быть сохранены, т.к. вы не присвоили все оценки (от {MIN_RATING} до {MAX_RATING}). ")
+				+ $"Чтобы изменить рейтинг конкретного игрока, ответьте на сообщение с его именем новым значением рейтинга (от {MIN_RATING} до {MAX_RATING})");
 
 			await this.TryDeleteLastMessage();
 			Message message = await this.API.SendMessage(this.Device.DeviceId, stringBuilder.ToString(), parseMode: ParseMode.Markdown);
