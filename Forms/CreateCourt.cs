@@ -11,25 +11,26 @@ namespace PrenburtisBot.Forms
 		{
 			if (playersCount < 3)
 				throw new ArgumentOutOfRangeException(nameof(playersCount), "Невозможно создать площадку, т.к. в опросе проголосовало меньше трёх игроков");
-			else if (playersCount < 9)
-				throw new ArgumentOutOfRangeException(nameof(playersCount), "Невозможно автоматически создать площадку, т.к. в опросе проголосовало меньше девяти игроков");
 
-			List<KeyValuePair<uint, double>> infos = [ new(6, 0), new(7, 0), new(5, 0) ];
+			List<KeyValuePair<uint, double>> infos = [ new(6, 0), new(7, 0), new(5, 0), new(4, 0) ];
 			for (int i = 0; i < infos.Count; i++)
 				infos[i] = new(infos[i].Key, (double)playersCount / (double)infos[i].Key);
 
-			infos.RemoveAll((KeyValuePair<uint, double> info) => info.Value < 1);
-			int capacity = default;
+			infos.RemoveAll((KeyValuePair<uint, double> info) => info.Value <= 1);
+			if (infos.Count == 0)
+				throw new ArgumentOutOfRangeException(nameof(playersCount), "Невозможно автоматически создать площадку, т.к. количество игроков не соответствует минимальным требованиям");
+
+			int capacity = int.MaxValue;
 			uint teamMaxPlayerCount = default;
 			foreach (KeyValuePair<uint, double> item in infos)
-				if (item.Value - Math.Truncate(item.Value) == 0)
+				if (item.Value - Math.Truncate(item.Value) == 0 && item.Value < capacity)
 				{
 					capacity = (int)item.Value;
 					teamMaxPlayerCount = item.Key;
 					break;
 				}
 
-			if (capacity == default)
+			if (capacity == int.MaxValue)
 			{
 				infos.Sort((KeyValuePair<uint, double> x, KeyValuePair<uint, double> y) => Math.Truncate(x.Value).CompareTo(Math.Truncate(y.Value)));
 				double teamCount = Math.Truncate(infos[0].Value);
