@@ -15,7 +15,7 @@ namespace PrenburtisBot.Types
 			return new(channel.id, channel.access_hash);
 		}
 
-		public static async Task<IReadOnlyCollection<Player>> GetPlayersFromPoll(this Client client, Telegram.Bot.Types.Message message, byte[] option)
+		public static async Task<IReadOnlyCollection<Player>> GetPlayersFromPoll(this Client client, Telegram.Bot.Types.Message message, string option)
 		{
 			if (message.Poll is not Telegram.Bot.Types.Poll poll)
 				throw new NullReferenceException($"Сообщение с ID {message.MessageId} не содержит опрос");

@@ -12,7 +12,6 @@ namespace PrenburtisBot.Forms
     internal class SendPoll : BotCommandGroupFormBase, IAfterBotStartAsyncExecutable
     {
         public const string PLAYER_JOINED = "Иду";
-        public const byte PLAYER_JOINED_BYTE = 48;
 
         public async Task<TextMessage> RenderAsync(MessageResult message)
         {
