@@ -45,6 +45,7 @@ namespace PrenburtisBot.Types
 			if (methodInfo is null)
 				return;
 
+			bool isFailed = false;
 			IEnumerable<TextMessage>? textMessages;
 			try
 			{
@@ -65,6 +66,7 @@ namespace PrenburtisBot.Types
 			}
 			catch (Exception e)
 			{
+				isFailed = true;
 				textMessages = [new TextMessage(e.Message).SetErrorKind().NavigateToStart()];
 			}
 
@@ -81,7 +83,6 @@ namespace PrenburtisBot.Types
 			foreach (TextMessage textMessage in textMessages)
 				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
-					bool mustSendError = bool.TryParse(Environment.GetEnvironmentVariable("SEND_ERROR_MESSAGE_IN_GROUPS") ?? bool.TrueString, out bool boolValue) && boolValue;
 					if (textMessage.Kind != TextMessageKind.Error || mustSendError)
 					{
 						Telegram.Bot.Types.Message newMessage = await this.API.SendMessage(this.Device.DeviceId, textMessage.Text, textMessage.ParseMode, textMessage.ReplyToMessageId,
@@ -92,7 +93,8 @@ namespace PrenburtisBot.Types
 						Console.Error.WriteLine(textMessage.Text);
 				}
 
-			await AfterMessagesSentAsync(newMessages, messageThreadId);
+			if (!isFailed)
+				await AfterMessagesSentAsync(newMessages, messageThreadId);
 
 			FormWithArgs? formWithArgs = null;
 			foreach (TextMessage textMessage in textMessages) 
