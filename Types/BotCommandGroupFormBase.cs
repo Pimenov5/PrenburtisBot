@@ -76,6 +76,8 @@ namespace PrenburtisBot.Types
 
 			int? messageThreadId = message.Message.Chat.IsForum ? message.Message.MessageThreadId : null;
 			List<Telegram.Bot.Types.Message> newMessages = new(textMessages.Count());
+			bool mustSendError = bool.TryParse(Environment.GetEnvironmentVariable("SEND_ERROR_MESSAGE_IN_GROUPS") ?? bool.TrueString, out bool boolValue) && boolValue;
+
 			foreach (TextMessage textMessage in textMessages)
 				if (!string.IsNullOrEmpty(textMessage.Text))
 				{
