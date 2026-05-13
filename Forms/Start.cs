@@ -21,7 +21,7 @@ namespace PrenburtisBot.Forms
 				await base.Render(message);
 		}
 
-		public async Task<string?> RenderAsync() => await RenderAsync(null);
+		public async Task<string?> RenderAsync() => await RenderAsync((string?)null);
 		public async Task<string?> RenderAsync(string? mode)
 		{
 			if (this.Device.LastMessage is Message message && message.From is Telegram.Bot.Types.User user && message.Document is Document document && document.FileName is string documentFileName
@@ -79,6 +79,16 @@ namespace PrenburtisBot.Forms
 			if (chatId.Identifier != this.Device.DeviceId)
 				await this.API.SendMessage(chatId, text);
 			return text;
+		}
+
+		public async Task<string?> RenderAsync(params string[] args)
+		{
+			return args.Length switch
+			{
+				1 => await RenderAsync(args[0]),
+				3 => await RenderAsync(args[0], args[1], args[2]),
+				_ => await RenderAsync()
+			};
 		}
 
 		public override async Task PreLoad(MessageResult message)
