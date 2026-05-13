@@ -5,14 +5,21 @@ namespace PrenburtisBot.Types
 {
 	internal static class TelegramClientExtensions
 	{
-		public static async Task<InputChannel> CreateInputChannelAsync(this Client client, Telegram.Bot.Types.Chat chat)
-		{
-			Messages_Chats chats = await client.Messages_GetAllChats();
-			long chatId = chat.Id.ToString().StartsWith("-100") ? long.Parse(chat.Id.ToString()[4..]) : chat.Id;
-			if (!chats.chats.TryGetValue(chatId, out ChatBase? chatBase) || chatBase is not Channel channel)
-				throw new InvalidOperationException($"Не удалось найти {chat.Type} с ID {chatId}");
+		private static readonly Dictionary<long, InputChannel> s_channels = [];
 
-			return new(channel.id, channel.access_hash);
+		public static async Task<InputChannel> GetInputChannelAsync(this Client client, Telegram.Bot.Types.Chat chat)
+		{
+			if (!s_channels.ContainsKey(chat.Id))
+			{
+				Messages_Chats chats = await client.Messages_GetAllChats();
+				long chatId = chat.Id.ToString().StartsWith("-100") ? long.Parse(chat.Id.ToString()[4..]) : chat.Id;
+				if (!chats.chats.TryGetValue(chatId, out ChatBase? chatBase) || chatBase is not Channel channel)
+					throw new InvalidOperationException($"Не удалось найти {chat.Type} с ID {chatId}");
+
+				s_channels.Add(chat.Id, new(channel.id, channel.access_hash));
+			}
+
+			return s_channels[chat.Id];
 		}
 
 		public static async Task<IReadOnlyCollection<Player>> GetPlayersFromPollAsync(this Client client, Telegram.Bot.Types.Message message, int optionIndex)
@@ -29,7 +36,7 @@ namespace PrenburtisBot.Types
 			Messages_VotesList? votes = null;
 			try
 			{
-				InputChannel inputChannel = await client.CreateInputChannelAsync(message.Chat);
+				InputChannel inputChannel = await client.GetInputChannelAsync(message.Chat);
 				votes = await client.Messages_GetPollVotes(inputChannel, message.MessageId);
 			}
 			catch (Exception e)
