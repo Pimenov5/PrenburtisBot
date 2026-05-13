@@ -15,7 +15,13 @@ namespace PrenburtisBot.Types
 			return new(channel.id, channel.access_hash);
 		}
 
-		public static async Task<IReadOnlyCollection<Player>> GetPlayersFromPoll(this Client client, Telegram.Bot.Types.Message message, string option)
+		public static async Task<IReadOnlyCollection<Player>> GetPlayersFromPollAsync(this Client client, Telegram.Bot.Types.Message message, int optionIndex)
+		{
+			Dictionary<int, List<Player>> dictionary = await GetPlayersFromPollAsync(client, message);
+			return dictionary[optionIndex];
+		}
+
+		public static async Task<Dictionary<int, List<Player>>> GetPlayersFromPollAsync(this Client client, Telegram.Bot.Types.Message message)
 		{
 			if (message.Poll is not Telegram.Bot.Types.Poll poll)
 				throw new NullReferenceException($"Сообщение с ID {message.MessageId} не содержит опрос");
@@ -24,7 +30,7 @@ namespace PrenburtisBot.Types
 			try
 			{
 				InputChannel inputChannel = await client.CreateInputChannelAsync(message.Chat);
-				votes = await client.Messages_GetPollVotes(inputChannel, message.MessageId, option: option);
+				votes = await client.Messages_GetPollVotes(inputChannel, message.MessageId);
 			}
 			catch (Exception e)
 			{
@@ -34,11 +40,15 @@ namespace PrenburtisBot.Types
 			if (votes is null)
 				throw new NullReferenceException($"Не удалось получить список проголосовавших в опросе \"{poll.Question}\"");
 
-			List<Player> players = new(votes.count);
-			foreach (MessagePeerVoteBase vote in votes.votes)
+			Dictionary<int, List<Player>> players = new(votes.count);
+			foreach (MessagePeerVote vote in votes.votes.Cast<MessagePeerVote>())
 			{
 				TL.User user = votes.users[vote.Peer.ID];
-				players.Add(Users.GetPlayer(vote.Peer.ID, user.first_name, user.username));
+				int optionIndex = int.Parse(vote.option);
+				if (!players.ContainsKey(optionIndex))
+					players.Add(optionIndex, []);
+
+				players[optionIndex].Add(Users.GetPlayer(vote.Peer.ID, user.first_name, user.username));
 			}
 
 			return players;

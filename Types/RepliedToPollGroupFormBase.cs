@@ -28,7 +28,7 @@ namespace PrenburtisBot.Types
 			if (_telegramClient is null)
 				return [new("Невозможно получить список проголосовавших в опросе, т.к. вы ещё не авторизовались")];
 
-			IReadOnlyCollection<Player> players = await _telegramClient.GetPlayersFromPoll(repliedMessage, "0");
+			IReadOnlyCollection<Player> players = await _telegramClient.GetPlayersFromPollAsync(repliedMessage, 0);
 
 			List<string> parameters = message.BotCommandParameters;
 			if (parameters.Count > 0 && parameters[^1].StartsWith('@') && (await this.API.GetMe()).Username is string botUsername && parameters[^1].Equals('@' + botUsername))
