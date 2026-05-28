@@ -70,7 +70,7 @@ namespace PrenburtisBot.Types
 				textMessages = [new TextMessage(e.Message).SetErrorKind().NavigateToStart()];
 			}
 
-			if (textMessages is null)
+			if (textMessages is null || textMessages.All((TextMessage textMessage) => textMessages is null))
 				return;
 
 			if (Environment.GetEnvironmentVariable("DELETE_APPEAL_TO_BOT_IN_GROUPS") is string value && bool.TryParse(value, out bool mustDelete) && mustDelete)
