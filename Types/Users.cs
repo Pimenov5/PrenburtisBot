@@ -1,4 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
+using System.Globalization;
+using System.Text;
 
 namespace PrenburtisBot.Types
 {
@@ -41,9 +43,17 @@ namespace PrenburtisBot.Types
 			if (!_users.TryGetValue(equalValue, out User? result))
 				return equalValue;
 
+			static bool EndsWithEmoji(string s)
+			{
+				string element = StringInfo.GetNextTextElement(s, s.Length - 1);
+				var rune = element.EnumerateRunes().Last();
+				return Rune.IsSymbol(rune);
+			}
+
 			if (!string.IsNullOrEmpty(username))
 				result.Username = username;
-			if (mustUpdateFirstName && firstName != result.FirstName && !string.IsNullOrEmpty(firstName))
+			if (mustUpdateFirstName && firstName != result.FirstName && !string.IsNullOrEmpty(firstName) && !(firstName.StartsWith(result.FirstName) && firstName.Length == result.FirstName.Length + 2 &&
+				EndsWithEmoji(firstName)))
 			{
 				Console.WriteLine($"Имя {result} обновлено на {firstName}");
 				result.FirstName = firstName;
