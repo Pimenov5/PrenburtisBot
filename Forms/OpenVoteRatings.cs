@@ -112,7 +112,7 @@ namespace PrenburtisBot.Forms
 			using SqliteTransaction transaction = SqliteConnection.BeginTransaction();
 			try
 			{
-				string format = (Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? throw new NullReferenceException("В переменных окружения отсутствует формат дат")) + " HH:mm:ss";
+				string format = (Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd") + " HH:mm:ss";
 				using SqliteCommand insertFormCommand = new("INSERT INTO ratings_forms (opened_timestamp) VALUES (\"" + _openedDateTime?.ToString(format) + "\") RETURNING id", SqliteConnection, transaction);
 				formId = (long)(insertFormCommand.ExecuteScalar() ?? throw new NullReferenceException("Не удалось выполнить запрос: " + insertFormCommand.CommandText));
 

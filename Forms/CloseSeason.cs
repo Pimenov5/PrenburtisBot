@@ -44,8 +44,9 @@ namespace PrenburtisBot.Forms
 			foreach (DateOnly dateOnly in dates.Keys)
 				line[index++] = dateOnly.ToString("dd.MM");
 
-			if (Environment.GetEnvironmentVariable("SEASON_PRICE") is not string seasonPriceStr || !double.TryParse(seasonPriceStr, out double seasonPrice))
-				throw new("В переменных окружения отсутствует стоимость абонемента");
+			const string SEASON_PRICE = "SEASON_PRICE";
+			if (Environment.GetEnvironmentVariable(SEASON_PRICE) is not string seasonPriceStr || !double.TryParse(seasonPriceStr, out double seasonPrice))
+				throw new EnvVariableException(SEASON_PRICE);
 
 			double price = Math.Round((seasonPrice - extras.Sum((pair) => pair.Value)) / dates.Sum((pair) => pair.Value), 2, MidpointRounding.AwayFromZero);
 

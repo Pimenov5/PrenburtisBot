@@ -12,7 +12,7 @@ namespace PrenburtisBot.BeforeBotStart
 			string dataSource = BeforeBotStartExecutableAttribute.GetPath("PRENBURTIS_DATA_BASE");
 			const string USERS_COMMAND_TEXT = "USERS_COMMAND_TEXT";
 			if (Environment.GetEnvironmentVariable(USERS_COMMAND_TEXT) is not string commandText)
-				throw new Exception($"Отсутствует значение переменной окружения {USERS_COMMAND_TEXT}");
+				throw new EnvVariableException(USERS_COMMAND_TEXT);
 
 			SqliteConnectionStringBuilder connectionStringBuilder = new() { Mode = SqliteOpenMode.ReadOnly, DataSource = dataSource };
 			using SqliteConnection connection = new(connectionStringBuilder.ConnectionString);
