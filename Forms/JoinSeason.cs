@@ -72,9 +72,10 @@ namespace PrenburtisBot.Forms
 			}
 		}
 
-		private string DatesToString(IEnumerable<DateOnly> dates)
+		private string DatesToString(List<DateOnly> dates)
 		{
-			StringBuilder stringBuilder = new($"В абонементе (ID {this.Season.Id}) c {this.Season.FirstDate} по {this.Season.LastDate} вы записались в следующие даты:" + Environment.NewLine);
+			StringBuilder stringBuilder = new($"В абонементе (ID {this.Season.Id}) c {this.Season.FirstDate} по {this.Season.LastDate} вы записались в следующие даты ({dates.Count}):" 
+				+ Environment.NewLine);
 			stringBuilder.AppendJoin(Environment.NewLine, dates);
 			return stringBuilder.ToString();
 		}
@@ -123,9 +124,14 @@ namespace PrenburtisBot.Forms
 				replyMarkup?.Add([button]);
 			}
 
-			string text = (replyMarkup is null ? string.Empty : "Выберите один из наборов дней недели ниже или ") + "введите даты через пробел, например: 1 3 5";
+			string text = (replyMarkup is null ? string.Empty : "Выберите один из наборов дней недели ниже или ") + "введите даты через пробел одним из нескольких способов.";
 			if (replyMarkup is null)
 				text = text[0].ToString().ToUpper() + text[1..];
+
+			text = text + Environment.NewLine + Environment.NewLine
+				+ "- Указать только конкретные даты: 1 3 5" + Environment.NewLine
+				+ "- Базовые дни недели, исключая даты: all -1 -3 -5" + Environment.NewLine
+				+ "- Определённые дни недели, включая и/или исключая даты: Monday/Friday +1 -3 +5";
 
 			text = $"Абонемент (ID {this.Season.Id}) на даты с {this.Season.FirstDate} по {this.Season.LastDate}" + Environment.NewLine + text;
 			return new(text) { ReplyMarkup = replyMarkup };
