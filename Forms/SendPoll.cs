@@ -6,6 +6,7 @@ using Telegram.Bot.Types.Enums;
 using TelegramBotBase.Base;
 using PrenburtisBot.Types;
 using PrenburtisBot.Extensions;
+using Microsoft.Data.Sqlite;
 
 namespace PrenburtisBot.Forms
 {
@@ -35,8 +36,9 @@ namespace PrenburtisBot.Forms
                 else if (TimeOnly.TryParse(arg, out TimeOnly timeOnly))
                     time ??= arg;
 
+            DateOnly date = DateOnly.FromDateTime(DateTime.Today.AddDays(dayCount ?? 1));
             string question = $"Перекличка на волейбол {(dayCount ?? 1) switch { 0 => "СЕГОДНЯ", 1 => "ЗАВТРА", _ => throw new ArgumentException($"{dayCount} не является валидным количеством дней") }}"
-                + $" ({DateTime.Today.AddDays(dayCount ?? 1).ToString("dddd", CultureInfo.GetCultureInfo("ru-RU"))}){(string.IsNullOrEmpty(time) ? string.Empty : $" в {time}")}";
+                + $" ({date.ToString("dddd", CultureInfo.GetCultureInfo("ru-RU"))}){(string.IsNullOrEmpty(time) ? string.Empty : $" в {time}")}";
 
             int messageId = default;
             if (Session.Get(typeof(SendPoll), chatId.ToString()) is string pinnedMessageId && int.TryParse(pinnedMessageId, out messageId))
@@ -51,12 +53,28 @@ namespace PrenburtisBot.Forms
                 }
             }
 
-            List<InputPollOption> options = [PLAYER_JOINED, "👀"];
-            for (int i = 2; i <= 9; i++)
-                if (Environment.GetEnvironmentVariable($"SEND_POLL_OPTION_{i}") is string item && !string.IsNullOrEmpty(item))
-                    options.Insert(i - 1, item);
+            bool mustAddOptions = true;
+            try
+            {
+                string strDate = date.ToString(Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd");
+                SqliteCommand command = new($"SELECT COUNT(*) FROM seasons_days WHERE \"date\" == \"{strDate}\"", this.GetSqliteConnection());
+                SqliteDataReader reader = command.ExecuteReader();
+                mustAddOptions = !reader.Read() || reader.GetInt32(0) != 0;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.Message);
+            }
 
-            const string REPLY_ID_POSTFIX = "_REPLY_ID";
+            List<InputPollOption> options = [PLAYER_JOINED, "👀"]; 
+            if (mustAddOptions && Environment.GetEnvironmentVariable("SEND_POLL_OPTIONS") is string envOptions && !string.IsNullOrEmpty(envOptions)
+				&& envOptions.Split(Commands.PARAMS_DELIMITER) is string[] optionsArray && optionsArray.Length > 0)
+			{
+				for (int i = 0; i < optionsArray.Length; i++)
+					options.Insert(i + 1, optionsArray[i]);
+			}
+
+			const string REPLY_ID_POSTFIX = "_REPLY_ID";
             Message pollMessage = await botClient.SendPoll(chatId, question, options, false, PollType.Regular, false, null, 
                 Session.Get(typeof(SendPoll), chatId.ToString() + REPLY_ID_POSTFIX) is string strReplyId && int.TryParse(strReplyId, out int replyId) ? replyId : null,
                 messageThreadId: messageThreadId);
