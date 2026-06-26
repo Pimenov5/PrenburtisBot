@@ -5,6 +5,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TelegramBotBase.Base;
 using PrenburtisBot.Types;
+using PrenburtisBot.Extensions;
 
 namespace PrenburtisBot.Forms
 {

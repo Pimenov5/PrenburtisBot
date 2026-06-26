@@ -1,7 +1,8 @@
 ﻿using WTelegram;
 using TL;
+using PrenburtisBot.Types;
 
-namespace PrenburtisBot.Types
+namespace PrenburtisBot.Extensions
 {
 	internal static class TelegramClientExtensions
 	{

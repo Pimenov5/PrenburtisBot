@@ -1,7 +1,7 @@
 ﻿using TelegramBotBase.Base;
 using TelegramBotBase.Form;
 
-namespace PrenburtisBot.Types
+namespace PrenburtisBot.Extensions
 {
 	internal static class FormBaseExtensions
 	{

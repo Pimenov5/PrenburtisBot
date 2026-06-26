@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using PrenburtisBot.Attributes;
+using PrenburtisBot.Extensions;
 using PrenburtisBot.Types;
 using System.Text;
 

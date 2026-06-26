@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
+using PrenburtisBot.Types;
 
-namespace PrenburtisBot.Types
+namespace PrenburtisBot.Extensions
 {
 	internal static class SqliteConnectionStringBuilderExtensions
 	{

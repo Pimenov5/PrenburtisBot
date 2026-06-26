@@ -1,4 +1,5 @@
 ﻿using PrenburtisBot.Attributes;
+using PrenburtisBot.Extensions;
 using PrenburtisBot.Types;
 using Telegram.Bot;
 using Telegram.Bot.Types;

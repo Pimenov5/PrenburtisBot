@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
+using PrenburtisBot.Extensions;
 
 namespace PrenburtisBot.Types
 {
