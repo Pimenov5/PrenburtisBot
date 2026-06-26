@@ -1,4 +1,6 @@
-﻿using PrenburtisBot.Forms;
+﻿using Microsoft.Data.Sqlite;
+using PrenburtisBot.Extensions;
+using PrenburtisBot.Forms;
 using System.Reflection;
 using Telegram.Bot;
 using TelegramBotBase.Base;
@@ -18,7 +20,9 @@ namespace PrenburtisBot.Types
 			return Task.CompletedTask;
 		};
 
+		protected SqliteConnection SqliteConnection => this.GetSqliteConnection();
 		protected virtual async Task AfterMessagesSentAsync(IReadOnlyCollection<Telegram.Bot.Types.Message> messages, int? messageThreadId) { }
+
 
 		public override async Task Render(MessageResult message)
 		{

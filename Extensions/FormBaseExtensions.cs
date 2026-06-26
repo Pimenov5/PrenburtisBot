@@ -1,10 +1,15 @@
-﻿using TelegramBotBase.Base;
+﻿using Microsoft.Data.Sqlite;
+using PrenburtisBot.Types;
+using System.Data.Common;
+using TelegramBotBase.Base;
 using TelegramBotBase.Form;
 
 namespace PrenburtisBot.Extensions
 {
 	internal static class FormBaseExtensions
 	{
+		private static SqliteConnection? s_connection = null;
+
 		public static string[] GetBotCommandParameters(this FormBase formBase, MessageResult messageResult)
 		{
 			List<string> botCommandParameters = messageResult.BotCommandParameters.Count > 0 ? messageResult.BotCommandParameters : [..(!string.IsNullOrEmpty(messageResult.BotCommand)
@@ -16,5 +21,26 @@ namespace PrenburtisBot.Extensions
 
 			return [..botCommandParameters];
 		}
+
+		public static SqliteConnection GetSqliteConnection(this FormBase? formBase)
+		{
+			if (s_connection is null)
+			{
+				const string DATA_SOURCE = "PRENBURTIS_DATA_BASE";
+				if (Environment.GetEnvironmentVariable(DATA_SOURCE) is not string path || string.IsNullOrEmpty(path))
+					throw new EnvVariableException(DATA_SOURCE);
+
+				if (!File.Exists(path))
+					throw new FileNotFoundException($"Отсутствует файл БД по пути: {path}");
+
+				SqliteConnectionStringBuilder builder = new() { DataSource = path, Mode = SqliteOpenMode.ReadWrite };
+				s_connection = new(builder.ConnectionString);
+				s_connection.Open();
+			}
+
+			return s_connection;
+		}
+
+		public static SqliteConnection GetSqliteConnection() => GetSqliteConnection(null);
 	}
 }

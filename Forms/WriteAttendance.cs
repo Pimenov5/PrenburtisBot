@@ -11,8 +11,6 @@ namespace PrenburtisBot.Forms
 	[BotCommand("Записать посещаемость", Telegram.Bot.Types.Enums.BotCommandScopeType.AllChatAdministrators)]
 	internal class WriteAttendance : RepliedToPollGroupFormBase
 	{
-		private static SqliteConnection? s_connection;
-
 		protected override TextMessage GetTextMessage(long userId, IReadOnlyCollection<Player> players, params string[] args)
 		{
 			DateOnly? dateOnly = null;
@@ -61,138 +59,125 @@ namespace PrenburtisBot.Forms
 			if (idsToInsert.Count == 0)
 				throw new ArgumentException($"Невозможно записать нулевую посещаемость игроков", nameof(players));
 
-			if (s_connection is null)
-			{
-				SqliteConnectionStringBuilder connectionStringBuilder = new() { Mode = SqliteOpenMode.ReadWrite };
-				s_connection = new(connectionStringBuilder.SetDataSource("PRENBURTIS_DATA_BASE").ConnectionString);
-			}
-
 			int result = default;
+			SqliteConnection connection = FormBaseExtensions.GetSqliteConnection();
+			using SqliteTransaction transaction = connection.BeginTransaction();
 			try
 			{
-				s_connection.Open();
-				using SqliteTransaction transaction = s_connection.BeginTransaction();
-				try
+				string dateTimeFormat = Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd";
+				Dictionary<long, TimeOnly>? times = [];
+				using (SqliteCommand selectCommand = new($"SELECT id, timestamp FROM attendance WHERE telegram_id = {userId} AND date(attendance.timestamp)"
+					+ $"= \"{(dateTime ?? DateTimeOffset.UtcNow).Date.ToString(dateTimeFormat)}\"", connection, transaction))
 				{
-					string dateTimeFormat = Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd";
-					Dictionary<long, TimeOnly>? times = [];
-					using (SqliteCommand selectCommand = new($"SELECT id, timestamp FROM attendance WHERE telegram_id = {userId} AND date(attendance.timestamp)"
-						+ $"= \"{(dateTime ?? DateTimeOffset.UtcNow).Date.ToString(dateTimeFormat)}\"", s_connection, transaction))
+					using SqliteDataReader selectReader = selectCommand.ExecuteReader();
+					while (selectReader.Read())
+						times.Add(selectReader.GetInt64(0), TimeOnly.FromDateTime(selectReader.GetDateTime(1)));
+				}
+
+				long attendanceId = default;
+				List<long> idsToDelete = [];
+				if (times.Count > 0)
+				{
+					if (attendance == Attendance.Update)
 					{
-						using SqliteDataReader selectReader = selectCommand.ExecuteReader();
-						while (selectReader.Read())
-							times.Add(selectReader.GetInt64(0), TimeOnly.FromDateTime(selectReader.GetDateTime(1)));
-					}
+						List<KeyValuePair<long, TimeOnly>> list = [.. times];
+						list.Sort((x, y) => y.Value.CompareTo(x.Value));
+						attendanceId = list[0].Key;
 
-					long attendanceId = default;
-					List<long> idsToDelete = [];
-					if (times.Count > 0)
-					{
-						if (attendance == Attendance.Update)
+						using SqliteCommand playersCommand = new($"SELECT telegram_id FROM attendance_users WHERE attendance_id = {attendanceId}", connection, transaction);
+						using SqliteDataReader playersReader = playersCommand.ExecuteReader();
+						List<long> dbPlayers = [];
+						while (playersReader.Read() && playersReader.GetInt64(0) is long telegramId)
+							if (!idsToInsert.Remove(telegramId))
+								idsToDelete.Add(telegramId);
+
+						if (idsToInsert.Count == 0 && idsToDelete.Count == 0)
 						{
-							List<KeyValuePair<long, TimeOnly>> list = [.. times];
-							list.Sort((x, y) => y.Value.CompareTo(x.Value));
-							attendanceId = list[0].Key;
-
-							using SqliteCommand playersCommand = new($"SELECT telegram_id FROM attendance_users WHERE attendance_id = {attendanceId}", s_connection, transaction);
-							using SqliteDataReader playersReader = playersCommand.ExecuteReader();
-							List<long> dbPlayers = [];
-							while (playersReader.Read() && playersReader.GetInt64(0) is long telegramId)
-								if (!idsToInsert.Remove(telegramId))
-									idsToDelete.Add(telegramId);
-
-							if (idsToInsert.Count == 0 && idsToDelete.Count == 0)
-							{
-								Console.WriteLine($"Обновление посещаемости в {list[0].Value} (ID {attendanceId}) не требуется");
-								return default;
-							}
-						}
-						else
-						{
-							Console.WriteLine($"Пользователь (ID {userId}) уже записал посещаемость сегодня{(times.Count > 1 ? ": " : " в ") + new StringBuilder().AppendJoin(", ", times.Values)}");
+							Console.WriteLine($"Обновление посещаемости в {list[0].Value} (ID {attendanceId}) не требуется");
 							return default;
 						}
 					}
-
-					if (attendanceId == default)
+					else
 					{
-						using SqliteCommand attendanceCommand = new($"INSERT INTO attendance (timestamp, telegram_id) VALUES ({(dateTime is null ? "current_timestamp"
-							: '"' + dateTime?.ToString(dateTimeFormat + " HH:mm:ss") + '"')}, {userId}) RETURNING id", s_connection, transaction);
-						if (attendanceCommand.ExecuteScalar() is not object attendanceCommandResult)
-							throw new Exception("Не удалось выполнить: " + attendanceCommand.CommandText);
-						attendanceId = (long)attendanceCommandResult;
+						Console.WriteLine($"Пользователь (ID {userId}) уже записал посещаемость сегодня{(times.Count > 1 ? ": " : " в ") + new StringBuilder().AppendJoin(", ", times.Values)}");
+						return default;
 					}
-					else if (attendance == Attendance.Update)
-					{
-						using SqliteCommand updateCommand = new($"UPDATE attendance SET timestamp = current_timestamp WHERE id = {attendanceId}", s_connection, transaction);
-						using SqliteDataReader updateReader = updateCommand.ExecuteReader();
-						if (updateReader.RecordsAffected != 1)
-							throw new Exception("Не удалось выполнить: " + updateCommand.CommandText);
-					}
-
-					if (idsToDelete.Count > 0)
-					{
-						using SqliteCommand deleteCommand = new($"DELETE FROM attendance_users WHERE attendance_id = {attendanceId} AND telegram_id IN ({new StringBuilder().AppendJoin(',', idsToDelete)})",
-							s_connection, transaction);
-						using SqliteDataReader deleteReader = deleteCommand.ExecuteReader();
-						if (deleteReader.RecordsAffected != idsToDelete.Count)
-							throw new Exception("Не удалось выполнить: " + deleteCommand.CommandText);
-						result += deleteReader.RecordsAffected;
-					}
-
-					if (idsToInsert.Count > 0)
-					{
-						List<Player>? usersToInsert = null;
-						foreach (Player player in players)
-						{
-							if (idsToInsert.Contains(player.UserId) && !Users.GetPlayers().Contains(player))
-							{
-								usersToInsert ??= [];
-								usersToInsert.Add(player);
-							}
-							;
-						}
-
-						if (usersToInsert is not null)
-						{
-							using SqliteCommand selectUsersCommand = new("SELECT users.telegram_id FROM users WHERE users.telegram_id IN ("
-								+ new StringBuilder().AppendJoin(',', usersToInsert.ConvertAll<long>((Player player) => player.UserId)) + ')', s_connection, transaction);
-							using SqliteDataReader selectUsersReader = selectUsersCommand.ExecuteReader();
-							List<long> idsToRemove = new(usersToInsert.Count);
-							while (selectUsersReader.HasRows && selectUsersReader.Read())
-								idsToRemove.Add(selectUsersReader.GetInt64(0));
-
-							usersToInsert.RemoveAll((Player player) => idsToRemove.Contains(player.UserId));
-							if (usersToInsert.Count > 0)
-							{
-								string commandText = new StringBuilder("INSERT INTO users (telegram_id, first_name, comment) VALUES ").AppendJoin(',',
-									usersToInsert.ConvertAll((Player player) => $"({player.UserId}, \"{player.FirstName}\", \"{userId} {DateTime.Now}\")")).ToString();
-								using SqliteCommand insertUsers = new(commandText, s_connection, transaction);
-								using SqliteDataReader usersReader = insertUsers.ExecuteReader();
-								if (usersReader.RecordsAffected != usersToInsert.Count)
-									throw new Exception("Не удалось выполнить: " + insertUsers.CommandText);
-							}
-						}
-
-						StringBuilder stringBuilder = new StringBuilder("INSERT INTO attendance_users (attendance_id, telegram_id) VALUES ").AppendJoin(',', idsToInsert.ConvertAll((long id) => $"({attendanceId},{id})"));
-						using SqliteCommand insertCommand = new(stringBuilder.ToString(), s_connection, transaction);
-						using SqliteDataReader insertReader = insertCommand.ExecuteReader();
-						if (insertReader.RecordsAffected != idsToInsert.Count)
-							throw new Exception("Не удалось выполнить: " + insertCommand.CommandText);
-						result += insertReader.RecordsAffected;
-					}
-
-					transaction.Commit();
 				}
-				catch
+
+				if (attendanceId == default)
 				{
-					transaction.Rollback();
-					throw;
+					using SqliteCommand attendanceCommand = new($"INSERT INTO attendance (timestamp, telegram_id) VALUES ({(dateTime is null ? "current_timestamp"
+						: '"' + dateTime?.ToString(dateTimeFormat + " HH:mm:ss") + '"')}, {userId}) RETURNING id", connection, transaction);
+					if (attendanceCommand.ExecuteScalar() is not object attendanceCommandResult)
+						throw new Exception("Не удалось выполнить: " + attendanceCommand.CommandText);
+					attendanceId = (long)attendanceCommandResult;
 				}
+				else if (attendance == Attendance.Update)
+				{
+					using SqliteCommand updateCommand = new($"UPDATE attendance SET timestamp = current_timestamp WHERE id = {attendanceId}", connection, transaction);
+					using SqliteDataReader updateReader = updateCommand.ExecuteReader();
+					if (updateReader.RecordsAffected != 1)
+						throw new Exception("Не удалось выполнить: " + updateCommand.CommandText);
+				}
+
+				if (idsToDelete.Count > 0)
+				{
+					using SqliteCommand deleteCommand = new($"DELETE FROM attendance_users WHERE attendance_id = {attendanceId} AND telegram_id IN ({new StringBuilder().AppendJoin(',', idsToDelete)})",
+						connection, transaction);
+					using SqliteDataReader deleteReader = deleteCommand.ExecuteReader();
+					if (deleteReader.RecordsAffected != idsToDelete.Count)
+						throw new Exception("Не удалось выполнить: " + deleteCommand.CommandText);
+					result += deleteReader.RecordsAffected;
+				}
+
+				if (idsToInsert.Count > 0)
+				{
+					List<Player>? usersToInsert = null;
+					foreach (Player player in players)
+					{
+						if (idsToInsert.Contains(player.UserId) && !Users.GetPlayers().Contains(player))
+						{
+							usersToInsert ??= [];
+							usersToInsert.Add(player);
+						}
+						;
+					}
+
+					if (usersToInsert is not null)
+					{
+						using SqliteCommand selectUsersCommand = new("SELECT users.telegram_id FROM users WHERE users.telegram_id IN ("
+							+ new StringBuilder().AppendJoin(',', usersToInsert.ConvertAll<long>((Player player) => player.UserId)) + ')', connection, transaction);
+						using SqliteDataReader selectUsersReader = selectUsersCommand.ExecuteReader();
+						List<long> idsToRemove = new(usersToInsert.Count);
+						while (selectUsersReader.HasRows && selectUsersReader.Read())
+							idsToRemove.Add(selectUsersReader.GetInt64(0));
+
+						usersToInsert.RemoveAll((Player player) => idsToRemove.Contains(player.UserId));
+						if (usersToInsert.Count > 0)
+						{
+							string commandText = new StringBuilder("INSERT INTO users (telegram_id, first_name, comment) VALUES ").AppendJoin(',',
+								usersToInsert.ConvertAll((Player player) => $"({player.UserId}, \"{player.FirstName}\", \"{userId} {DateTime.Now}\")")).ToString();
+							using SqliteCommand insertUsers = new(commandText, connection, transaction);
+							using SqliteDataReader usersReader = insertUsers.ExecuteReader();
+							if (usersReader.RecordsAffected != usersToInsert.Count)
+								throw new Exception("Не удалось выполнить: " + insertUsers.CommandText);
+						}
+					}
+
+					StringBuilder stringBuilder = new StringBuilder("INSERT INTO attendance_users (attendance_id, telegram_id) VALUES ").AppendJoin(',', idsToInsert.ConvertAll((long id) => $"({attendanceId},{id})"));
+					using SqliteCommand insertCommand = new(stringBuilder.ToString(), connection, transaction);
+					using SqliteDataReader insertReader = insertCommand.ExecuteReader();
+					if (insertReader.RecordsAffected != idsToInsert.Count)
+						throw new Exception("Не удалось выполнить: " + insertCommand.CommandText);
+					result += insertReader.RecordsAffected;
+				}
+
+				transaction.Commit();
 			}
-			finally
+			catch
 			{
-				s_connection.Close();
+				transaction.Rollback();
+				throw;
 			}
 
 			return result;

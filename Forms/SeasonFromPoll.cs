@@ -16,7 +16,6 @@ namespace PrenburtisBot.Forms
 	internal class SeasonFromPoll : BotCommandGroupFormBase
 	{
 		private static WTelegram.Client? s_client;
-		private static SqliteConnection? s_connection;
 
 		private bool? _isConfirmed = null;
 		private int? _seasonId = null, _repliedMessageId = null;
@@ -24,7 +23,7 @@ namespace PrenburtisBot.Forms
 
 		private int InsertPlayersToDataBase()
 		{
-			if (s_connection is null)
+			if (this.SqliteConnection is null)
 				throw new NullReferenceException("Невозможно записать дни тренировок в абонемент, т.к. отсутствует подключение к БД");
 
 			int count = 0;
@@ -34,13 +33,13 @@ namespace PrenburtisBot.Forms
 			if (count == 0)
 				throw new InvalidOperationException("Невозможно записать дни тренировок в абонемент, т.к. отсутствуют данные для записи");
 
-			SqliteTransaction transaction = s_connection.BeginTransaction();
+			SqliteTransaction transaction = this.SqliteConnection.BeginTransaction();
 			try
 			{
 				StringBuilder stringBuilder = new($"SELECT DISTINCT telegram_id FROM seasons_days WHERE season_id = {_seasonId} AND telegram_id IN (");
 				stringBuilder.AppendJoin(',', _result.Keys.Select((Player player, int index) => player.UserId)).Append(')');
 
-				using SqliteCommand selectCommand = new(stringBuilder.ToString(), s_connection, transaction);
+				using SqliteCommand selectCommand = new(stringBuilder.ToString(), this.SqliteConnection, transaction);
 				using SqliteDataReader selectReader = selectCommand.ExecuteReader();
 				List<Player> players = [];
 				while (selectReader.Read())
@@ -68,7 +67,7 @@ namespace PrenburtisBot.Forms
 						stringBuilder.Append(',');
 				}
 
-				using SqliteCommand insertCommand = new(stringBuilder.ToString(), s_connection, transaction);
+				using SqliteCommand insertCommand = new(stringBuilder.ToString(), this.SqliteConnection, transaction);
 				using SqliteDataReader insertReader = insertCommand.ExecuteReader();
 				if (insertReader.RecordsAffected != count)
 					throw new Exception($"Количество добавленных строк ({insertReader.RecordsAffected}) не равно количеству записей в абонемент ({_result.Count})");
@@ -130,19 +129,12 @@ namespace PrenburtisBot.Forms
 			Dictionary<int, List<Player>> players = await (s_client
 				?? throw new NullReferenceException("Невозможно получить список проголосовавших в опросе, т.к. вы ещё не авторизовались")).GetPlayersFromPollAsync(repliedMessage);
 
-			if (s_connection is null)
-			{
-				SqliteConnectionStringBuilder connectionStringBuilder = new() { Mode = SqliteOpenMode.ReadWrite };
-				s_connection = new(connectionStringBuilder.SetDataSource("PRENBURTIS_DATA_BASE").ConnectionString);
-				s_connection.Open();
-			}
-
 			Season season;
 			DateOnly firstDate, lastDate;
 			string dateFormat = Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd";
 
 			using (SqliteCommand seasonCommand = new($"SELECT id, first_date, last_date FROM seasons WHERE \"{DateTime.UtcNow.ToString(dateFormat + "hh:mm:ss")}\" >= opened_timestamp "
-				+ "AND closed_timestamp IS NULL AND id = (SELECT MAX(id) FROM seasons)", s_connection))
+				+ "AND closed_timestamp IS NULL AND id = (SELECT MAX(id) FROM seasons)", this.SqliteConnection))
 			{
 				using SqliteDataReader seasonReader = seasonCommand.ExecuteReader();
 				if (!seasonReader.Read())
@@ -167,7 +159,7 @@ namespace PrenburtisBot.Forms
 			Dictionary<Player, double>? extras = null;
 			if (message.BotCommandParameters.Count == 1 && message.BotCommandParameters[0].Equals(ALL_PLAYERS_ALIAS, StringComparison.OrdinalIgnoreCase))
 			{
-				using (SqliteCommand playersCommand = new($"SELECT telegram_id, \"date\" FROM seasons_days WHERE season_id = {season.Id} ORDER BY telegram_id", s_connection))
+				using (SqliteCommand playersCommand = new($"SELECT telegram_id, \"date\" FROM seasons_days WHERE season_id = {season.Id} ORDER BY telegram_id", this.SqliteConnection))
 				{
 					using SqliteDataReader playersReader = playersCommand.ExecuteReader();
 					Player? player = null, prevPlayer = null;

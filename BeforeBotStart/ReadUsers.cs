@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using PrenburtisBot.Attributes;
+using PrenburtisBot.Extensions;
 using PrenburtisBot.Types;
 
 namespace PrenburtisBot.BeforeBotStart
@@ -14,9 +15,7 @@ namespace PrenburtisBot.BeforeBotStart
 			if (Environment.GetEnvironmentVariable(USERS_COMMAND_TEXT) is not string commandText)
 				throw new EnvVariableException(USERS_COMMAND_TEXT);
 
-			SqliteConnectionStringBuilder connectionStringBuilder = new() { Mode = SqliteOpenMode.ReadOnly, DataSource = dataSource };
-			using SqliteConnection connection = new(connectionStringBuilder.ConnectionString);
-			connection.Open();
+			SqliteConnection connection = FormBaseExtensions.GetSqliteConnection();
 			Console.WriteLine($"Установлено соединение с {connection.DataSource}");
 
 			using SqliteCommand command = new(commandText, connection);

@@ -124,8 +124,8 @@ namespace PrenburtisBot.Forms
 				using SqliteTransaction transaction = SqliteConnection.BeginTransaction();
 				try
 				{
-					using SqliteCommand updateCommand = new($"UPDATE seasons SET closed_timestamp = \"{(DateTime.UtcNow.ToString(Environment.GetEnvironmentVariable("DB_DATE_FORMAT") 
-						?? "yyyy-MM-dd") + " hh:mm:ss")}\" WHERE id = {_seasonId}", SqliteConnection, transaction);
+					using SqliteCommand updateCommand = new($"UPDATE seasons SET closed_timestamp = \"{(DateTime.UtcNow.ToString((Environment.GetEnvironmentVariable("DB_DATE_FORMAT") 
+						?? "yyyy-MM-dd") + " hh:mm:ss"))}\" WHERE id = {_seasonId}", SqliteConnection, transaction);
 					using SqliteDataReader updateReader = updateCommand.ExecuteReader();
 					if (updateReader.RecordsAffected != 1)
 						throw new($"При закрытии абонемента количество обновлённых строк должно быть равно 1, а не {updateReader.RecordsAffected}");
