@@ -5,6 +5,7 @@ namespace PrenburtisBot.Types
 	internal static class Session
 	{
 		private static string? s_path;
+		private static bool s_readExecuted = false;
 		private static Dictionary<string, Dictionary<string, string>> _types = [];
 
 		public static string? Path { get => s_path ?? Environment.GetEnvironmentVariable((nameof(Session) + '_' + nameof(Session.Path)).ToUpper()); 
@@ -28,6 +29,13 @@ namespace PrenburtisBot.Types
 		{
 			if (string.IsNullOrEmpty(Path))
 				throw new NullReferenceException($"Невозможно записать данные сессии, т.к. не задано значение свойства {nameof(Path)}");
+			const string CAN_WRITE_SESSION_WITHOUT_READ = "CAN_WRITE_SESSION_WITHOUT_READ";
+			if (!s_readExecuted && Environment.GetEnvironmentVariable(CAN_WRITE_SESSION_WITHOUT_READ) is string strCanWrite && bool.TryParse(strCanWrite, out bool canWrite) && !canWrite)
+			{
+				Console.WriteLine($"Предотвращена попытка записи сессии, т.к. {CAN_WRITE_SESSION_WITHOUT_READ} = {canWrite}");
+				return;
+			}
+
 			using FileStream fileStream = File.Exists(Path) ? File.OpenWrite(Path) : File.Create(Path);
 			fileStream.SetLength(0);
 			using Utf8JsonWriter writer = new(fileStream);
@@ -57,6 +65,7 @@ namespace PrenburtisBot.Types
 			{
 				using FileStream fileStream = File.OpenRead(Path);
 				_types = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(fileStream) ?? _types;
+				s_readExecuted = true;
 				return true;
 			}
 			else
