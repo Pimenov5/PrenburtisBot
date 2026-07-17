@@ -133,7 +133,7 @@ namespace PrenburtisBot.Forms
 			DateOnly firstDate, lastDate;
 			string dateFormat = Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd";
 
-			using (SqliteCommand seasonCommand = new($"SELECT id, first_date, last_date FROM seasons WHERE \"{DateTime.UtcNow.ToString(dateFormat + "hh:mm:ss")}\" >= opened_timestamp "
+			using (SqliteCommand seasonCommand = new($"SELECT id, first_date, last_date FROM seasons WHERE \"{DateTime.UtcNow.ToString(dateFormat + " HH:mm:ss")}\" >= opened_timestamp "
 				+ "AND closed_timestamp IS NULL AND id = (SELECT MAX(id) FROM seasons)", this.SqliteConnection))
 			{
 				using SqliteDataReader seasonReader = seasonCommand.ExecuteReader();

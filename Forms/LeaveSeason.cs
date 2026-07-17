@@ -41,7 +41,7 @@ namespace PrenburtisBot.Forms
 				}
 			}
 
-			string dateFormat = Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd";
+			string dateFormat = (Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd") + " HH:mm:ss";
 			using SqliteCommand datesCommand = new($"SELECT season_id, \"date\" FROM seasons_days WHERE season_id = (SELECT id FROM seasons WHERE \"{DateTime.UtcNow.ToString(dateFormat)}\" >= opened_timestamp "
 				+ $"AND closed_timestamp IS NULL) AND telegram_id = {userId} ORDER BY \"date\"", SqliteConnection);
 			using SqliteDataReader datesReader = datesCommand.ExecuteReader();

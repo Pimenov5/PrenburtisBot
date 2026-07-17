@@ -93,7 +93,7 @@ namespace PrenburtisBot.Forms
 			}
 
 			using SqliteCommand seasonCommand = new("SELECT id, first_date, last_date FROM seasons " 
-				+ $"WHERE \"{DateTime.UtcNow.ToString((Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd") + "hh:mm:ss")}\" >= opened_timestamp AND closed_timestamp IS NULL AND id = (SELECT MAX(id) FROM seasons)", SqliteConnection);
+				+ $"WHERE \"{DateTime.UtcNow.ToString((Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd") + " HH:mm:ss")}\" >= opened_timestamp AND closed_timestamp IS NULL AND id = (SELECT MAX(id) FROM seasons)", SqliteConnection);
 			using SqliteDataReader seasonReader = seasonCommand.ExecuteReader();
 			if (!seasonReader.Read())
 				return new TextMessage("Не удалось найти открытый для записи абонемент").NavigateToStart();
