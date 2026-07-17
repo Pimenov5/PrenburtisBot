@@ -41,4 +41,12 @@ namespace PrenburtisBot.Types
 			return this;
 		}
 	}
+
+	internal class ErrorTextMessage : TextMessage
+	{
+		public ErrorTextMessage(string text, ParseMode parseMode = ParseMode.Markdown) : base(text, TextMessageKind.Error)
+		{
+			this.SetErrorKind(parseMode);
+		}
+	}
 }
