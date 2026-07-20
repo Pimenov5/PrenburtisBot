@@ -74,7 +74,6 @@ namespace PrenburtisBot.Forms
 
 		private Form? _form;
 		private int? _lastMessageId;
-		private bool? _isConfirmed;
 		private ReplyMarkup? _replyMarkup;
 		private readonly Dictionary<Player, int> _votes = [];
 
@@ -138,22 +137,6 @@ namespace PrenburtisBot.Forms
 		public async Task<TextMessage> RenderAsync(long userId) => await RenderAsync(userId, null);
 		public async Task<TextMessage> RenderAsync(long userId, string? strRating)
 		{
-			if (_isConfirmed is bool isConfirmed)
-			{
-				_isConfirmed = null;
-				if (isConfirmed)
-				{
-					int count = this.WriteVotes(userId);
-					OnVotesWrote?.Invoke(userId, _votes);
-					return new TextMessage($"Количество записанных ответов: {count}") { ReplyMarkup = ReplyMarkup.RemoveKeyboard }.NavigateToStart();
-				}
-				else
-				{
-					await this.TryDeleteLastMessage();
-					return new(string.Empty);
-				}
-			}
-
 			_form ??= VoteRatings.GetForm();
 			using (SqliteCommand timestampCommand = new($"SELECT timestamp FROM ratings_forms_users WHERE telegram_id = {userId} AND ratings_form_id = {_form.Id}", SqliteConnection))
 			{
@@ -272,12 +255,27 @@ namespace PrenburtisBot.Forms
 				new("Вернуться и редактировать", bool.FalseString)]) { AutoCloseOnClick = false };
 			confirmDialog.ButtonClicked += async (object? sender, ButtonClickedEventArgs eventArgs) =>
 			{
-				_isConfirmed = bool.Parse(eventArgs.Button.Value);
-				await confirmDialog.NavigateTo(this);
+				await confirmDialog.NavigateTo(this, eventArgs.Button.Value);
 			};
 
 			await this.NavigateTo(confirmDialog);
 			return new(string.Empty);
+		}
+
+		public async Task<TextMessage> RenderAsync(string strIsConfirmed)
+		{
+			if (!bool.TryParse(strIsConfirmed, out bool isConfirmed))
+				return await this.RenderAsync(this.Device.DeviceId, strIsConfirmed);
+			else if (!isConfirmed)
+			{
+				await this.TryDeleteLastMessage();
+				return new TextMessage(string.Empty).NavigateToStart();
+			}
+
+			long userId = this.Device.DeviceId;
+			int count = this.WriteVotes(userId);
+			OnVotesWrote?.Invoke(userId, _votes);
+			return new TextMessage($"Количество записанных ответов: {count}") { ReplyMarkup = ReplyMarkup.RemoveKeyboard }.NavigateToStart();
 		}
 	}
 }

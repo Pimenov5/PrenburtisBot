@@ -10,7 +10,6 @@ namespace PrenburtisBot.Forms
 	internal class CloseSeason : SqliteBotCommandFormBase
 	{
 		private int? _seasonId = null;
-		private bool? _isConfirmed = null;
 
 		public static string GetCsvString(SortedDictionary<Player, HashSet<DateOnly>> players, char separator, Dictionary<Player, double> extras)
 		{
@@ -116,30 +115,6 @@ namespace PrenburtisBot.Forms
 
 		public async Task<TextMessage?> RenderAsync()
 		{
-			if (_isConfirmed is bool isConfirmed)
-			{
-				if (!isConfirmed)
-					return new TextMessage(string.Empty).NavigateToStart();
-
-				using SqliteTransaction transaction = SqliteConnection.BeginTransaction();
-				try
-				{
-					using SqliteCommand updateCommand = new($"UPDATE seasons SET closed_timestamp = \"{(DateTime.UtcNow.ToString((Environment.GetEnvironmentVariable("DB_DATE_FORMAT") 
-						?? "yyyy-MM-dd") + " HH:mm:ss"))}\" WHERE id = {_seasonId}", SqliteConnection, transaction);
-					using SqliteDataReader updateReader = updateCommand.ExecuteReader();
-					if (updateReader.RecordsAffected != 1)
-						throw new($"При закрытии абонемента количество обновлённых строк должно быть равно 1, а не {updateReader.RecordsAffected}");
-
-					transaction.Commit();
-					return new TextMessage($"Абонемент с ID {_seasonId} успешно закрыт").NavigateToStart();
-				}
-				catch
-				{
-					transaction.Rollback();
-					throw;
-				}
-			}
-
 			using SqliteCommand seasonCommand = new("SELECT id FROM seasons WHERE closed_timestamp IS NULL AND id = (SELECT MAX(id) FROM seasons)", SqliteConnection);
 			using SqliteDataReader seasonReader = seasonCommand.ExecuteReader();
 			if (!seasonReader.Read())
@@ -174,13 +149,37 @@ namespace PrenburtisBot.Forms
 			ConfirmDialog confirmDialog = new($"Закрыть запись в абонемент с ID {_seasonId}?", new("Закрыть", bool.TrueString), new("Отмена", bool.FalseString)) { AutoCloseOnClick = false };
 			confirmDialog.ButtonClicked += async (object sender, ButtonClickedEventArgs eventArgs) =>
 			{
-				_isConfirmed = bool.Parse(eventArgs.Button.Value);
-				await confirmDialog.NavigateTo(this);
+				await confirmDialog.NavigateTo(this, eventArgs.Button.Value);
 			};
 
 			await this.Device.SendTextFile($"Season ID {_seasonId} from DB.csv", csvString, caption: $"CSV-таблица абонемента с ID {_seasonId} из БД");
 			await this.NavigateTo(confirmDialog);
 			return null;
+		}
+
+		public TextMessage Render(string strIsConfirmed)
+		{
+			if (!bool.Parse(strIsConfirmed))
+				return new TextMessage(string.Empty).NavigateToStart();
+
+			using SqliteTransaction transaction = SqliteConnection.BeginTransaction();
+			try
+			{
+				using SqliteCommand updateCommand = new($"UPDATE seasons SET closed_timestamp = \"{(DateTime.UtcNow.ToString((Environment.GetEnvironmentVariable("DB_DATE_FORMAT")
+					?? "yyyy-MM-dd") + " HH:mm:ss"))}\" WHERE id = {_seasonId}", SqliteConnection, transaction);
+				using SqliteDataReader updateReader = updateCommand.ExecuteReader();
+				if (updateReader.RecordsAffected != 1)
+					throw new($"При закрытии абонемента количество обновлённых строк должно быть равно 1, а не {updateReader.RecordsAffected}");
+
+				transaction.Commit();
+			}
+			catch
+			{
+				transaction.Rollback();
+				throw;
+			}
+
+			return new TextMessage($"Абонемент с ID {_seasonId} успешно закрыт").NavigateToStart();
 		}
 	}
 }

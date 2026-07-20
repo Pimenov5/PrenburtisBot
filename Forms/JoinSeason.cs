@@ -15,7 +15,6 @@ namespace PrenburtisBot.Forms
 		private Season? _season = null;
 		private Season Season => _season ?? throw new NullReferenceException("Отсутствует информацию об абонементе");
 
-		private bool? _isConfirmed = null;
 		private List<DateOnly>? _dates = null;
 
 		private List<DateOnly> GetDatesFromNumbers(string[] args)
@@ -85,13 +84,6 @@ namespace PrenburtisBot.Forms
 			if (Users.GetPlayer(userId, string.Empty) is not User user || user.IsArchived)
 				return new TextMessage("Только зарегистрированные и активные игроки могут выбирать дни тренировок").NavigateToStart();
 
-			if (_isConfirmed is bool isConfirmed)
-			{
-				_isConfirmed = null;
-				int? result = isConfirmed ? this.WriteDatesToDb(userId) : null;
-				return new TextMessage(result is null ? string.Empty : "Количество сохранённых дат: " + result.ToString()).NavigateToStart();
-			}
-
 			using SqliteCommand seasonCommand = new("SELECT id, first_date, last_date FROM seasons " 
 				+ $"WHERE \"{DateTime.UtcNow.ToString((Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd") + " HH:mm:ss")}\" >= opened_timestamp AND closed_timestamp IS NULL AND id = (SELECT MAX(id) FROM seasons)", SqliteConnection);
 			using SqliteDataReader seasonReader = seasonCommand.ExecuteReader();
@@ -150,12 +142,22 @@ namespace PrenburtisBot.Forms
 			ConfirmDialog confirmDialog = new("Сохранить выбранные дни тренировок?", new("Сохранить", bool.TrueString), new("Отмена", bool.FalseString)) { AutoCloseOnClick = false };
 			confirmDialog.ButtonClicked += async (object? sender, ButtonClickedEventArgs eventArgs) =>
 			{
-				_isConfirmed = bool.Parse(eventArgs.Button.Value);
-				await confirmDialog.NavigateTo(this);
+				await confirmDialog.NavigateTo(this, eventArgs.Button.Value);
 			};
 
 			await this.NavigateTo(confirmDialog);
 			return null;
+		}
+
+		public async Task<TextMessage?> RenderAsync(string strIsConfirmed)
+		{
+			if (!bool.TryParse(strIsConfirmed, out bool isConfirmed))
+				return await RenderAsync(this.Device.DeviceId, [strIsConfirmed]);
+			else  if (!isConfirmed)
+				return new TextMessage(string.Empty).NavigateToStart();
+
+			int count = this.WriteDatesToDb(this.Device.DeviceId);
+			return new TextMessage($"Количество сохранённых дат: {count}").NavigateToStart();
 		}
 	}
 }
