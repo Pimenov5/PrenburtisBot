@@ -17,7 +17,6 @@ namespace PrenburtisBot.Forms
 	{
 		private static WTelegram.Client? s_client;
 
-		private bool? _isConfirmed = null;
 		private int? _seasonId = null, _repliedMessageId = null;
 		private readonly SortedDictionary<Player, HashSet<DateOnly>> _result = new(Comparer<Player>.Create((x, y) => x.FirstName.CompareTo(y.FirstName)));
 
@@ -88,16 +87,6 @@ namespace PrenburtisBot.Forms
 
 		public async Task<TextMessage?> RenderAsync(MessageResult message)
 		{
-			if (_isConfirmed is bool isConfirmed)
-			{
-				_isConfirmed = null;
-				if (!isConfirmed)
-					return new TextMessage(string.Empty).NavigateToStart();
-
-				int count = InsertPlayersToDataBase();
-				return new TextMessage($"В абонемент (ID {_seasonId}) добавлено строк: {count}") { NavigateTo = new(new CloseSeason()), ReplyToMessageId = _repliedMessageId };
-			}
-
 			if (message.Message.ReplyToMessage is not Message repliedMessage || repliedMessage.Poll is not Poll poll || poll.IsAnonymous || poll.AllowsMultipleAnswers)
 				return new("Команда должна вызываться в ответ на не анонимный опрос");
 
@@ -133,7 +122,7 @@ namespace PrenburtisBot.Forms
 			DateOnly firstDate, lastDate;
 			string dateFormat = Environment.GetEnvironmentVariable("DB_DATE_FORMAT") ?? "yyyy-MM-dd";
 
-			using (SqliteCommand seasonCommand = new($"SELECT id, first_date, last_date FROM seasons WHERE \"{DateTime.UtcNow.ToString(dateFormat + "hh:mm:ss")}\" >= opened_timestamp "
+			using (SqliteCommand seasonCommand = new($"SELECT id, first_date, last_date FROM seasons WHERE \"{DateTime.UtcNow.ToString(dateFormat + " HH:mm:ss")}\" >= opened_timestamp "
 				+ "AND closed_timestamp IS NULL AND id = (SELECT MAX(id) FROM seasons)", this.SqliteConnection))
 			{
 				using SqliteDataReader seasonReader = seasonCommand.ExecuteReader();
@@ -191,11 +180,19 @@ namespace PrenburtisBot.Forms
 			confirmDialog.ButtonClicked += async (object sender, ButtonClickedEventArgs eventArgs) =>
 			{
 				_seasonId = season.Id;
-				_isConfirmed = bool.Parse(eventArgs.Button.Value);
-				await confirmDialog.NavigateTo(this);
+				await confirmDialog.NavigateTo(this, eventArgs.Button.Value);
 			};
 
 			return new TextMessage(string.Empty) { NavigateTo = new(confirmDialog) };
+		}
+
+		public TextMessage Render(string strIsConfirmed)
+		{
+			if (!bool.Parse(strIsConfirmed))
+				return new TextMessage(string.Empty).NavigateToStart();
+
+			int count = InsertPlayersToDataBase();
+			return new TextMessage($"В абонемент (ID {_seasonId}) добавлено строк: {count}") { NavigateTo = new(new CloseSeason()), ReplyToMessageId = _repliedMessageId };
 		}
 	}
 }

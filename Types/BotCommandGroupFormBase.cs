@@ -44,8 +44,9 @@ namespace PrenburtisBot.Types
 				parameters = [message];
 			}
 
-			const string METHOD_NAME = "RenderAsync";
-			MethodInfo? methodInfo = this.GetType().GetMethod(METHOD_NAME, types);
+			const string METHOD_NAME = "Render";
+			const string ASYNC_METHOD_NAME = METHOD_NAME + "Async";
+			MethodInfo? methodInfo = this.GetType().GetMethod(ASYNC_METHOD_NAME, types) ?? this.GetType().GetMethod(METHOD_NAME, types);
 			if (methodInfo is null)
 				return;
 
@@ -71,7 +72,7 @@ namespace PrenburtisBot.Types
 			catch (Exception e)
 			{
 				isFailed = true;
-				textMessages = [new TextMessage(e.Message).SetErrorKind().NavigateToStart()];
+				textMessages = [new TextMessage((e.InnerException ?? e).Message).SetErrorKind().NavigateToStart()];
 			}
 
 			if (textMessages is null || textMessages.All((TextMessage textMessage) => textMessages is null))

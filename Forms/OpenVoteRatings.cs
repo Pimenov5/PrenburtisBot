@@ -148,7 +148,9 @@ namespace PrenburtisBot.Forms
 				+ ". Если вы не хотите или не можете принять участие в голосовании, пожалуйста, напишите об этом." + Environment.NewLine);
 			if (Environment.GetEnvironmentVariable("TIER_MAKER_LINK") is string tierMakerLink)
 				stringBuilder.AppendLine("Рекомендуется использовать визуальный тир-лист для упрощения распределения игроков между оценками: " + tierMakerLink + Environment.NewLine);
-			stringBuilder.AppendLine("Заполнить форму голосования: t.me/" + (await this.API.GetMe()).Username + $"?{nameof(Start).ToLower()}=" + nameof(VoteRatings).ToLower());
+
+			string link = await Start.GetDeepLinkAsync(this.API, typeof(VoteRatings));
+			stringBuilder.AppendLine("Заполнить форму голосования: " + link);
 
 			return new TextMessage(stringBuilder.ToString()) { ParseMode = ParseMode.Markdown, ReplyMarkup = ReplyMarkup.RemoveKeyboard, LinkPreviewOptions = true }.NavigateToStart();
 		}
