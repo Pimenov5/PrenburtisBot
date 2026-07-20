@@ -269,7 +269,7 @@ namespace PrenburtisBot.Forms
 			else if (!isConfirmed)
 			{
 				await this.TryDeleteLastMessage();
-				return new TextMessage(string.Empty).NavigateToStart();
+				return new("Ответьте на сообщение с именем игрока новым значением рейтинга");
 			}
 
 			long userId = this.Device.DeviceId;
