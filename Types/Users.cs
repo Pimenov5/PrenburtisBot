@@ -12,6 +12,11 @@ namespace PrenburtisBot.Types
 			public override int GetHashCode(User? player) => player is null ? default : player.UserId.GetHashCode();
 		}
 
+		private class TempUser(long userId, string firstName, double rating, Gender gender, Skills skills, bool isArchived) : User(userId, firstName, rating, gender, skills, isArchived)
+		{
+			public new void SetUserId(long userId) { base.SetUserId(userId); }
+		}
+
 		private static readonly HashSet<User> _users = new(new UserEqualityComparer());
 
 		public static int Read(SqliteDataReader reader)
