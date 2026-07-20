@@ -66,5 +66,21 @@ namespace PrenburtisBot.Types
 
 			return result;
 		}
+
+		public static List<Player> GetPlayers(params IReadOnlyCollection<long> ids)
+		{
+			List<Player> result = new(ids.Count);
+			TempUser equalValue = new(default, string.Empty, default, default, default, default);
+			foreach (long id in ids)
+			{
+				equalValue.SetUserId(id);
+				if (!_users.TryGetValue(equalValue, out User? user))
+					continue;
+
+				result.Add(user);
+			}
+
+			return result;
+		}
 	}
 }
