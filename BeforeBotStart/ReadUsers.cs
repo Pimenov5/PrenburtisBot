@@ -10,7 +10,6 @@ namespace PrenburtisBot.BeforeBotStart
 	{
 		private static string GetCommandText()
 		{
-			string dataSource = BeforeBotStartExecutableAttribute.GetPath("PRENBURTIS_DATA_BASE");
 			const string USERS_COMMAND_TEXT = "USERS_COMMAND_TEXT";
 			if (Environment.GetEnvironmentVariable(USERS_COMMAND_TEXT) is not string commandText)
 				throw new EnvVariableException(USERS_COMMAND_TEXT);
@@ -26,6 +25,23 @@ namespace PrenburtisBot.BeforeBotStart
 			using SqliteCommand command = new(commandText, connection);
 			using SqliteDataReader reader = command.ExecuteReader();
 			return $"Добавлены ранговые игроки ({Users.Read(reader)})";
+		}
+
+		public static int UpdateFromSqliteDb(IReadOnlyCollection<long>? ids = null)
+		{
+			string commandText = GetCommandText();
+			commandText = commandText.Replace("*", "telegram_id, user_rating, passing, setting, attacking");
+			if (ids is not null)
+				commandText = commandText + " WHERE telegram_id IN (" + String.Join(',', ids) + ")";
+
+			SqliteConnection connection = FormBaseExtensions.GetSqliteConnection();
+			using SqliteCommand command = new(commandText, connection);
+			using SqliteDataReader reader = command.ExecuteReader();
+			if (!Users.TryUpdateRatingsAndSkills(reader, ids is null ? null : (int count) => count == ids.Count,  out int count))
+				throw new("Не удалось обновить рейтинги игроков");
+
+			Console.WriteLine($"Обновлены рейтинги и навыки игроков ({count})");
+			return count;
 		}
 	}
 }
