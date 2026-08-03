@@ -34,18 +34,42 @@ using TelegramBotBase.Markdown;
 		}
 	}
 
-	internal class Player(long userId, string firstName, double rating, Gender gender, Skills skills)
+	internal class Player
 	{
-		private string _firstName = firstName;
+		private string _firstName;
+		private long _userId;
+		private double _rating;
+		private Skills _skills;
 
-		public readonly long UserId = userId;
+		protected void SetUserId(long userId) { _userId = userId; }
+
+		public Player(long userId, string firstName, double rating, Gender gender, Skills skills)
+		{
+			_firstName = firstName;
+			this.SetUserId(userId);
+			this.SetRatingAndSkills(rating, skills);
+
+			this.Gender = gender;
+		}
+
+		public long UserId => _userId;
 		public int Rank => (int)Math.Truncate(this.Rating);
 		public string FirstName { get { return _firstName; } set { _firstName = string.IsNullOrEmpty(value) ? throw new ArgumentNullException(nameof(FirstName)) : value; } }
 		public string? Username;
-		public readonly double Rating = rating;
-		public readonly Gender Gender = gender;
-		public readonly Skills Skills = skills;
+		public double Rating => _rating;
+		public readonly Gender Gender;
+		public Skills Skills => _skills;
 
+		public const double MIN_RATING = 0.0;
+		public const double MAX_RATING = 10.0;
+		public void SetRatingAndSkills(double rating, Skills skills)
+		{
+			if (rating < MIN_RATING || rating > MAX_RATING)
+				throw new ArgumentException($"Значение рейтинга игрока ({rating}) должно быть от {MIN_RATING} до {MAX_RATING}", nameof(rating));
+
+			_rating = rating;
+			_skills = skills;
+		}
 		public string Link => $"tg://user?id={this.UserId}".Link(this.FirstName) + this.Skills.ToString([Skill.Attacking, Skill.Setting, Skill.Passing], prefix: " ");
 		public override string ToString() => this.Link;
 	}

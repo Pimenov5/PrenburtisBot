@@ -12,6 +12,11 @@ namespace PrenburtisBot.Types
 			public override int GetHashCode(User? player) => player is null ? default : player.UserId.GetHashCode();
 		}
 
+		private class TempUser(long userId, string firstName, double rating, Gender gender, Skills skills, bool isArchived) : User(userId, firstName, rating, gender, skills, isArchived)
+		{
+			public new void SetUserId(long userId) { base.SetUserId(userId); }
+		}
+
 		private static readonly HashSet<User> _users = new(new UserEqualityComparer());
 
 		public static int Read(SqliteDataReader reader)
@@ -36,6 +41,47 @@ namespace PrenburtisBot.Types
 			return _users.Count - count;
 		}
 
+		public static bool TryUpdateRatingsAndSkills(SqliteDataReader reader, Func<int, bool>? checkCountCallback, out int count)
+		{
+			count = 0;
+			const int FIELD_COUNT = 5;
+			if (reader.FieldCount < FIELD_COUNT)
+				throw new ArgumentException($"Количество полей в запросе должно быть не меньше {FIELD_COUNT}", nameof(reader));
+
+			Dictionary<User, (double, Skills)> prevValues = new(_users.Count);
+			TempUser equalValue = new(default, string.Empty, default, default, default, default);
+			try
+			{
+				while (reader.Read())
+				{
+					long userId = reader.GetInt64(0);
+					equalValue.SetUserId(userId);
+					if (!_users.TryGetValue(equalValue, out User? user))
+						throw new ArgumentException($"Невозмонно обновить рейтинги и навыки, т.к. не удалось найти игрока с ID {userId}", nameof(reader));
+
+					prevValues.Add(user, (user.Rating, user.Skills));
+					double rating = reader.GetDouble(1);
+					Skills skills = new(reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4));
+					user.SetRatingAndSkills(rating, skills);
+					count++;
+				}
+
+				if (checkCountCallback is not null && !checkCountCallback.Invoke(count))
+					throw new ArgumentException($"Количество обновлённых игроков ({count}) не соответствует требуемому", nameof(checkCountCallback));
+			}
+			catch (Exception ex)
+			{
+				foreach (User user in prevValues.Keys)
+					user.SetRatingAndSkills(prevValues[user].Item1, prevValues[user].Item2);
+
+				count = 0;
+				Console.Error.WriteLine("Не удалось обновить рейтинги игроков: " + ex.Message);
+				return false;
+			}
+
+			return true;
+		}
+
 		public static IReadOnlyCollection<Player> GetPlayers() => _users;
 		public static Player GetPlayer(long userId, string firstName, string? username = null, bool mustUpdateFirstName = true)
 		{
@@ -57,6 +103,22 @@ namespace PrenburtisBot.Types
 			{
 				Console.WriteLine($"Имя {result} обновлено на {firstName}");
 				result.FirstName = firstName;
+			}
+
+			return result;
+		}
+
+		public static List<Player> GetPlayers(params IReadOnlyCollection<long> ids)
+		{
+			List<Player> result = new(ids.Count);
+			TempUser equalValue = new(default, string.Empty, default, default, default, default);
+			foreach (long id in ids)
+			{
+				equalValue.SetUserId(id);
+				if (!_users.TryGetValue(equalValue, out User? user))
+					continue;
+
+				result.Add(user);
 			}
 
 			return result;

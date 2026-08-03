@@ -13,18 +13,38 @@ namespace PrenburtisBot.Forms
 	[BotCommandChat("Открыть форму голосования", "BOT_OWNER_CHAT_ID")]
 	internal class OpenVoteRatings : SqliteBotCommandFormBase
 	{
+		private bool _mustOfferCustom = true;
 		private DateTime? _openedDateTime = null;
 		private readonly List<long> _playersIds = [];
 		private readonly Dictionary<int, List<Player>> _players = [];
 		private const string NEED_MIN_ATTENDANCE = "Введите минимальное количество посещений для участия в голосовании";
 
-		private static string GetSortedPlayersString(Dictionary<int, List<Player>> players, IList<long>? idsList = null)
+		private static string GetSortedPlayersString(Dictionary<int, List<Player>> players, IList<long>? idsList = null, bool mustAddCount = false)
 		{
-			List<KeyValuePair<int, List<Player>>> sortedPlayers = [.. idsList is null ? players : players.Where((pair) => pair.Value.Any((Player player) => idsList.Contains(player.UserId)))];
+			List<KeyValuePair<int, List<Player>>> sortedPlayers = [.. idsList is null ? players : []];
+			if (sortedPlayers.Count == 0) 
+			{
+				foreach (KeyValuePair<int, List<Player>> pair in players)
+				{
+					if (!pair.Value.Any((Player player) => idsList!.Contains(player.UserId)))
+						continue;
+
+					KeyValuePair<int, List<Player>> newPair = new(pair.Key, []);
+					sortedPlayers.Add(newPair);
+					foreach (Player player in pair.Value)
+						if (idsList!.Contains(player.UserId))
+							newPair.Value.Add(player);
+				}
+			}
+
+			int count = 0;
 			sortedPlayers.Sort((x, y) => y.Key.CompareTo(x.Key));
 			StringBuilder stringBuilder = new();
 			foreach (KeyValuePair<int, List<Player>> pair in sortedPlayers)
-				stringBuilder.AppendLine(new StringBuilder($"{pair.Key}: ").AppendJoin(", ", pair.Value).ToString());
+			{
+				count += pair.Value.Count;
+				stringBuilder.AppendLine($"{pair.Key}: " + String.Join(", ", pair.Value) + (mustAddCount ? $" ({count})" : string.Empty));
+			}
 
 			return stringBuilder.ToString();
 		}
@@ -64,7 +84,7 @@ namespace PrenburtisBot.Forms
 			}
 
 			return new($"Количество посещений игроками ({count}) с {prevFormClosedString} ({prevFormId})" + Environment.NewLine
-				+ GetSortedPlayersString(_players) + Environment.NewLine + NEED_MIN_ATTENDANCE) { ParseMode = ParseMode.Markdown };
+				+ GetSortedPlayersString(_players, null, true) + Environment.NewLine + NEED_MIN_ATTENDANCE) { ParseMode = ParseMode.Markdown };
 		}
 
 		public async Task<TextMessage> RenderAsync(params string[] args)
@@ -74,17 +94,89 @@ namespace PrenburtisBot.Forms
 
 			if (_playersIds.Count < MIN_PLAYERS_COUNT && args.Length == 1 && int.TryParse(args[0], out minAttendance) && minAttendance > 1)
 			{
+				_playersIds.Clear();
 				foreach (KeyValuePair<int, List<Player>> pair in _players)
 					if (pair.Key >= minAttendance)
 						_playersIds.AddRange(pair.Value.ConvertAll<long>((Player player) => player.UserId));
 			}
 
+			if (args.Any((string item) => item.StartsWith('+') || item.StartsWith('-'))) 
+			{
+				List<Player>? allPlayers = null;
+				List<long> idsToAdd = new(args.Length), idsToRemove = new(args.Length);
+				foreach (string item in args)
+				{
+					bool founded = false;
+					string name = item[1..];
+					switch (item[0])
+					{
+						case '+':
+							allPlayers ??= [.. Users.GetPlayers()];
+							foreach (Player player in allPlayers)
+								if (player.FirstName == name)
+								{
+									if (idsToAdd.Contains(player.UserId) || _playersIds.Contains(player.UserId))
+										return new ErrorTextMessage($"Невозможно добавлять игроков (в том числе \"{name}\") два или более раза");
+
+									idsToAdd.Add(player.UserId);
+									founded = true;
+									break;
+								}
+
+							break;
+
+						case '-':
+							foreach (List<Player> list in _players.Values)
+							{
+								foreach (Player player in list)
+									if (player.FirstName == name)
+									{
+										idsToRemove.Add(player.UserId);
+										founded = true;
+										break;
+									}
+
+								if (founded)
+									break;
+							}
+
+							break;
+
+						default:
+							throw new ArgumentException($"Невозможно добавить (+) или удалить (-) имя игрока \"{item}\"", nameof(args));
+					}
+
+					if (!founded)
+						return new ErrorTextMessage($"Не удалось найти игрока с именем \"{name}\"");
+				}
+
+				if (idsToAdd.Any((long id) => idsToRemove.Contains(id)) || idsToRemove.Any((long id) => idsToAdd.Contains(id)))
+					return new ErrorTextMessage("В списке игроков для добавления и удаления есть повторяющиеся имена");
+
+				_mustOfferCustom = false;
+				_playersIds.AddRange(idsToAdd);
+				int count = _playersIds.RemoveAll((long id) => idsToRemove.Contains(id));
+
+				await this.Device.Send($"Добавлены ({idsToAdd.Count}) и удалены ({count}) игроки из списка голосующих");
+				await this.Device.Send(GetSortedPlayersString(_players, _playersIds, true));
+			}
+
+			const string CUSTOM_PLAYERS = "Вы можете добавить (+) и/или удалить (-) имена игроков из списка";
 			if (_playersIds.Count < MIN_PLAYERS_COUNT)
 			{
-				int count = _playersIds.Count;
-				_playersIds.Clear();
-				return new((count > 0 ? $"Количество игроков ({count}) с доступом к форме голосования не может быть меньше {MIN_PLAYERS_COUNT}."
-					: minAttendance < 1 && args.Length == 1 ? "Минимальное количество посещений не может быть меньше 1." : string.Empty) + Environment.NewLine + NEED_MIN_ATTENDANCE);
+				if (_players.Count > 0)
+				{
+					return new($"Количество игроков ({_players.Count}) с доступом к форме голосования не может быть меньше {MIN_PLAYERS_COUNT}. Уменьшите минимальное количество посещений или "
+						+ CUSTOM_PLAYERS.ToLower());
+				}
+				else 
+					return new((minAttendance < 1 && args.Length == 1 ? "Минимальное количество посещений не может быть меньше 1." : string.Empty) + Environment.NewLine + NEED_MIN_ATTENDANCE);
+			}
+
+			if (_mustOfferCustom)
+			{
+				_mustOfferCustom = false;
+				return new(CUSTOM_PLAYERS);
 			}
 
 			if (_openedDateTime is null && args.Length == 2
@@ -94,7 +186,7 @@ namespace PrenburtisBot.Forms
 			}
 			
 			if (_openedDateTime is null)
-				return new("Введите UTC дату и время открытия формы голосования") { ReplyMarkup = DateTime.UtcNow.ToString("dd.MM.yyyy HH:mm") };			
+				return new("Введите UTC дату и время открытия формы голосования") { ReplyMarkup = DateTime.UtcNow.ToString("g") };			
 
 			if (args.Length == 2)
 			{
